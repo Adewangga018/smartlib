@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "160438197952",
+    "project_id": "smartlib-e123d",
+    "storage_bucket": "smartlib-e123d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:160438197952:android:9c0ea8d58e887564f75725",
+        "android_client_info": {
+          "package_name": "com.example.smartlib"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhgRAlGb0Bysd847IEbgJw3Ir6cKwSRL8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
