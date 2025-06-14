@@ -1,3 +1,4 @@
+// profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smartlib/common/providers/profile_provider.dart';
@@ -6,7 +7,7 @@ import 'package:smartlib/features/auth/screens/login_screen.dart';
 import 'package:smartlib/features/profile/screens/edit_profile_screen.dart';
 import 'package:smartlib/core/providers/auth_provider.dart';
 import 'package:smartlib/features/profile/screens/change_password_screen.dart';
-import 'package:smartlib/features/profile/screens/delete_account_screen.dart'; // <-- IMPORT SCREEN BARU INI
+import 'package:smartlib/features/profile/screens/delete_account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -18,6 +19,10 @@ class ProfileScreen extends StatelessWidget {
     return Consumer<ProfileProvider>(
       builder: (context, profileProvider, child) {
         final user = profileProvider.user;
+
+        // --- TAMBAHKAN PRINT STATEMENT DI SINI ---
+        print('ProfileScreen: Rendering. Current user photoUrl: ${user?.photoUrl}');
+        // ----------------------------------------
 
         if (profileProvider.isLoading) {
           return const Scaffold(
@@ -78,31 +83,42 @@ class ProfileScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundColor: AppColors.primaryBlue,
-                      child: Icon(Icons.person, size: 50, color: Colors.white),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          user.username,
-                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkBlueText),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          user.email,
-                          style: const TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ],
+                GestureDetector(
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
+                    );
+                    profileProvider.reloadUserProfile();
+                  },
+                  child: CircleAvatar(
+                    radius: 60,
+                    backgroundColor: AppColors.primaryBlue,
+                    backgroundImage: user.photoUrl != null && user.photoUrl!.isNotEmpty
+                        ? NetworkImage(user.photoUrl!) as ImageProvider<Object>?
+                        : null,
+                    child: user.photoUrl == null || user.photoUrl!.isEmpty
+                        ? const Icon(Icons.person, size: 60, color: Colors.white)
+                        : null,
+                  ),
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 16),
+                Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        user.username,
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkBlueText),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        user.email,
+                        style: const TextStyle(fontSize: 16, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
                 const Divider(),
                 ListTile(
                   leading: const Icon(Icons.edit_outlined, color: AppColors.darkBlueText),
@@ -139,19 +155,16 @@ class ProfileScreen extends StatelessWidget {
                     }
                   },
                 ),
-                // --- TAMBAHKAN TOMBOL DELETE ACCOUNT DI SINI ---
                 ListTile(
-                  leading: const Icon(Icons.delete_forever, color: Colors.red), // Icon delete
+                  leading: const Icon(Icons.delete_forever, color: Colors.red),
                   title: const Text('Delete Account', style: TextStyle(color: Colors.red)),
                   trailing: const Icon(Icons.chevron_right, color: Colors.red),
                   onTap: () {
-                    // Navigasi ke layar konfirmasi penghapusan akun
                     Navigator.of(context).push(
                       MaterialPageRoute(builder: (context) => const DeleteAccountScreen()),
                     );
                   },
                 ),
-                // --- AKHIR TAMBAHAN ---
               ],
             ),
           ),

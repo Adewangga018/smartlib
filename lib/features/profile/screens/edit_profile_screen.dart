@@ -1,3 +1,4 @@
+// edit_profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smartlib/common/models/user_model.dart';
@@ -17,33 +18,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _usernameController;
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
+  late TextEditingController _photoUrlController; // TAMBAHAN: Controller untuk photoUrl
 
-  // Simpan ID pengguna
   String? _userId;
 
   @override
   void initState() {
     super.initState();
-    // Ambil data user saat ini dari provider
-    // Pastikan user tidak null saat initState
     final user = Provider.of<ProfileProvider>(context, listen: false).user;
 
     if (user != null) {
-      _userId = user.id; // Simpan ID pengguna
+      _userId = user.id;
       _firstNameController = TextEditingController(text: user.firstName);
       _lastNameController = TextEditingController(text: user.lastName);
       _usernameController = TextEditingController(text: user.username);
       _emailController = TextEditingController(text: user.email);
       _phoneController = TextEditingController(text: user.phoneNumber);
+      _photoUrlController = TextEditingController(text: user.photoUrl); // TAMBAHAN: Inisialisasi photoUrl
     } else {
-      // Handle case where user is null (e.g., redirect to login or show error)
-      _userId = ''; // Atau tangani sesuai kebutuhan
+      _userId = '';
       _firstNameController = TextEditingController();
       _lastNameController = TextEditingController();
       _usernameController = TextEditingController();
       _emailController = TextEditingController();
       _phoneController = TextEditingController();
-      // Mungkin tampilkan SnackBar atau navigasi kembali jika tidak ada user
+      _photoUrlController = TextEditingController(); // TAMBAHAN: Inisialisasi kosong
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error: No user data to edit.')),
@@ -60,6 +59,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _usernameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _photoUrlController.dispose(); // TAMBAHAN: Dispose controller
     super.dispose();
   }
 
@@ -81,6 +81,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Center( // TAMBAHAN: Tampilkan CircleAvatar untuk foto profil
+                      child: GestureDetector(
+                        onTap: () {
+                          // TODO: Implementasi logic untuk memilih/mengubah foto
+                          // Saat ini hanya fokus pada input link
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Masukkan link foto di bawah.')),
+                          );
+                        },
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: AppColors.primaryBlue,
+                          backgroundImage: _photoUrlController.text.isNotEmpty
+                              ? NetworkImage(_photoUrlController.text) as ImageProvider<Object>?
+                              : null,
+                          child: _photoUrlController.text.isEmpty
+                              ? const Icon(Icons.camera_alt, size: 60, color: Colors.white)
+                              : null,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField( // TAMBAHAN: Field untuk Photo URL
+                      controller: _photoUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Profile Photo URL (Link)',
+                        hintText: 'e.g. https://drive.google.com/uc?export=view&id=YOUR_FILE_ID',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 30),
                     const Text('Profile Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
                     TextFormField(controller: _firstNameController, decoration: const InputDecoration(labelText: 'First Name', border: OutlineInputBorder())),
@@ -91,12 +122,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     const SizedBox(height: 30),
                     const Text('Personal Information', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
-                    // Email seharusnya tidak bisa diedit langsung jika menggunakan Firebase Auth sebagai primary ID
-                    // Atau tambahkan logika untuk re-authenticate jika email diubah
                     TextFormField(
                         controller: _emailController,
                         decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
-                        readOnly: true, // Biasanya email tidak boleh diubah langsung
+                        readOnly: true,
                         style: const TextStyle(color: Colors.grey)
                     ),
                     const SizedBox(height: 16),
@@ -122,21 +151,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                // --- Logika Tombol Save ---
                 onPressed: profileProvider.isLoading || _userId == null || _userId!.isEmpty
                     ? null
                     : () async {
                         // Buat objek User baru dari data di controller
                         final updatedUser = User(
-                          id: _userId!, // Pastikan ID tidak null
+                          id: _userId!,
                           firstName: _firstNameController.text,
                           lastName: _lastNameController.text,
                           username: _usernameController.text,
-                          email: _emailController.text, // Email diambil dari controller
+                          email: _emailController.text,
                           phoneNumber: _phoneController.text,
+                          photoUrl: _photoUrlController.text.isNotEmpty ? _photoUrlController.text : null, // TAMBAHAN: Ambil photoUrl dari controller
                         );
                         // Panggil fungsi update dari provider
                         await profileProvider.updateUserProfile(updatedUser);
+
+                        // Panggil update photo secara terpisah jika diperlukan (opsional, karena sudah terintegrasi di updateUserProfile)
+                        // await profileProvider.updateProfilePhoto(_photoUrlController.text.isNotEmpty ? _photoUrlController.text : null);
+
                         if (context.mounted && profileProvider.errorMessage == null) {
                           Navigator.of(context).pop();
                         }
