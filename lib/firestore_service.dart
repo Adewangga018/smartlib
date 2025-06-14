@@ -1,3 +1,4 @@
+// firestore_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smartlib/common/models/user_model.dart';
 
@@ -41,4 +42,16 @@ class FirestoreService {
     }
   }
   // --- AKHIR TAMBAHAN ---
+
+  // TAMBAHAN: Fungsi untuk memperbarui hanya foto profil
+  Future<void> updateUserProfilePhoto(String uid, String? photoUrl) async {
+    try {
+      await _usersCollection.doc(uid).update({
+        'photoUrl': photoUrl,
+      });
+    } catch (e) {
+      print('Error updating profile photo: $e');
+      throw Exception('Failed to update profile photo: ${e.toString()}');
+    }
+  }
 }
