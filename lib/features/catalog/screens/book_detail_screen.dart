@@ -12,7 +12,19 @@ class BookDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
-        final isFav = bookProvider.isFavorite(book);
+        // Ambil data buku dari provider untuk memastikan kita mendapatkan data terbaru
+        // Termasuk rating dan review jika sudah di-fetch.
+        // Kita cari di toReadList dan finishedBooks.
+        final currentBook = bookProvider.toReadListBooks.firstWhere(
+              (b) => b.title == book.title,
+              orElse: () => bookProvider.finishedBooks.firstWhere(
+                    (b) => b.title == book.title,
+                    orElse: () => book, // Fallback ke buku asli jika tidak ditemukan di provider
+                  ),
+            );
+
+        final isFav = bookProvider.isFavorite(currentBook);
+
         return DefaultTabController(
           length: 3,
           child: Scaffold(
@@ -23,7 +35,7 @@ class BookDetailScreen extends StatelessWidget {
               actions: [
                 IconButton(
                   icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? Colors.red : Colors.grey),
-                  onPressed: () => bookProvider.toggleFavorite(book),
+                  onPressed: () => bookProvider.toggleFavorite(currentBook),
                 )
               ],
             ),
@@ -35,45 +47,79 @@ class BookDetailScreen extends StatelessWidget {
                     height: 300,
                     width: 200,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), spreadRadius: 2, blurRadius: 8, offset: const Offset(0, 4))],
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          spreadRadius: 2,
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
-                    child: ClipRRect(borderRadius: BorderRadius.circular(15), child: Image.network(book.imageUrl, fit: BoxFit.cover)),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: currentBook.imageUrl.isNotEmpty
+                          ? Image.network(
+                              currentBook.imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                color: Colors.grey[300],
+                                child: const Center(
+                                  child: Icon(Icons.broken_image, color: Colors.grey, size: 80),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Icon(Icons.book_outlined, color: Colors.grey, size: 80),
+                              ),
+                            ),
+                    ),
                   ),
-                  const SizedBox(height: 20),
-                  Text(book.title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.darkBlueText)),
+                  const SizedBox(height: 24),
+                  Text(
+                    currentBook.title,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkBlueText,
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(book.author, style: const TextStyle(fontSize: 16, color: Colors.grey)),
-                  const SizedBox(height: 20),
+                  Text(
+                    'by ${currentBook.author}',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   const TabBar(
+                    indicatorColor: AppColors.primaryBlue,
                     labelColor: AppColors.primaryBlue,
                     unselectedLabelColor: Colors.grey,
-                    indicatorColor: AppColors.primaryBlue,
-                    tabs: [Tab(text: 'Synopsis'), Tab(text: 'Info'), Tab(text: 'Reviews')],
+                    tabs: [
+                      Tab(text: 'Sinopsis'),
+                      Tab(text: 'Info Buku'),
+                      Tab(text: 'Ulasan'),
+                    ],
                   ),
                   SizedBox(
-                    height: 200,
+                    height: 300, // Atur tinggi sesuai kebutuhan
                     child: TabBarView(
                       children: [
-                        // --- PERUBAHAN DI SINI ---
-                        _buildSynopsisTab(book),
-                        _buildInfoTab(book),
-                        _buildReviewsTab(context, book)
+                        _buildSynopsisTab(context, currentBook), // Menggunakan currentBook
+                        _buildInfoTab(context, currentBook),     // Menggunakan currentBook
+                        _buildReviewsTab(context, currentBook),  // Menggunakan currentBook
                       ],
                     ),
                   ),
                 ],
-              ),
-            ),
-            bottomNavigationBar: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  bookProvider.addToReadList(book);
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ditambahkan ke To-read List'), duration: Duration(seconds: 1)));
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-                child: const Text('+ Add to Read-List', style: TextStyle(fontSize: 18)),
               ),
             ),
           ),
@@ -82,28 +128,21 @@ class BookDetailScreen extends StatelessWidget {
     );
   }
 
-  // --- PERUBAHAN DI SINI: Menampilkan sinopsis dari objek Book ---
-  Widget _buildSynopsisTab(Book book) {
-    return SingleChildScrollView(
+  Widget _buildSynopsisTab(BuildContext context, Book book) {
+    return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Text(
-        book.synopsis, // Menggunakan data sinopsis dinamis
-        textAlign: TextAlign.justify,
-        style: TextStyle(
-          fontSize: 15,
-          color: Colors.grey[700],
-          height: 1.5,
-        ),
+        book.synopsis.isNotEmpty ? book.synopsis : 'Sinopsis belum tersedia.', // Tampilkan sinopsis
+        style: TextStyle(fontSize: 16, color: Colors.grey[800]),
       ),
     );
   }
 
-  // --- PERUBAHAN DI SINI: Menampilkan info dari objek Book ---
-  Widget _buildInfoTab(Book book) {
+  Widget _buildInfoTab(BuildContext context, Book book) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Text(
-        book.info, // Menggunakan data info dinamis
+        book.info.isNotEmpty ? book.info : 'Informasi buku belum tersedia.', // Tampilkan info
         style: TextStyle(
           fontSize: 15,
           color: Colors.grey[800],
@@ -114,12 +153,9 @@ class BookDetailScreen extends StatelessWidget {
   }
 
   Widget _buildReviewsTab(BuildContext context, Book book) {
-    final bookData = Provider.of<BookProvider>(context).finishedBooks.firstWhere(
-          (b) => b.title == book.title,
-          orElse: () => book,
-        );
-
-    if (bookData.rating == null || bookData.rating == 0) {
+    // Kita sudah mengambil `currentBook` di bagian build, jadi kita bisa langsung menggunakannya.
+    // Tidak perlu mencari lagi di finishedBooks.
+    if (book.rating == null || book.rating == 0) {
       return const Center(child: Text('Belum ada ulasan untuk buku ini.'));
     }
 
@@ -134,7 +170,7 @@ class BookDetailScreen extends StatelessWidget {
               const SizedBox(width: 8),
               Row(
                 children: List.generate(5, (index) => Icon(
-                  index < bookData.rating! ? Icons.star : Icons.star_border,
+                  index < book.rating! ? Icons.star : Icons.star_border,
                   color: Colors.amber,
                 )),
               )
@@ -143,7 +179,10 @@ class BookDetailScreen extends StatelessWidget {
           const SizedBox(height: 16),
           const Text('Ulasan:', style: TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text(bookData.reviewText ?? 'Tidak ada teks ulasan.'),
+          Text(
+            book.reviewText ?? 'Tidak ada ulasan.',
+            style: TextStyle(fontSize: 16, color: Colors.grey[800]),
+          ),
         ],
       ),
     );

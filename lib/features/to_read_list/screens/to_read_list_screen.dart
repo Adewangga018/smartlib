@@ -12,6 +12,7 @@ class ToReadListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
+        // Ambil buku dari toReadListBooks
         final toReadBooks = bookProvider.toReadListBooks;
 
         return Scaffold(
@@ -21,7 +22,6 @@ class ToReadListScreen extends StatelessWidget {
             backgroundColor: AppColors.background,
             elevation: 0,
             foregroundColor: AppColors.darkBlueText,
-            // --- PERUBAHAN DI SINI ---
             automaticallyImplyLeading: false, // Menghilangkan tombol kembali
           ),
           body: Padding(
@@ -35,46 +35,46 @@ class ToReadListScreen extends StatelessWidget {
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 0.55,
+                      childAspectRatio: 0.65,
                     ),
                     itemCount: toReadBooks.length,
                     itemBuilder: (context, index) {
                       final book = toReadBooks[index];
-                      return Column(
+                      return Stack(
                         children: [
-                          Expanded(
-                            child: Stack(
-                              children: [
-                                BookCard(book: book),
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: CircleAvatar(
-                                    backgroundColor: Colors.black.withOpacity(0.6),
-                                    radius: 15,
-                                    child: IconButton(
-                                      padding: EdgeInsets.zero,
-                                      icon: const Icon(Icons.close, color: Colors.white, size: 15),
-                                      onPressed: () => bookProvider.removeFromReadList(book),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: () => bookProvider.markAsFinished(book),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                          BookCard(book: book), // BookCard sebagai dasar
+
+                          // Tombol "Tandai Selesai" ditempatkan di bawah kartu
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              // Tambahkan padding atau margin jika diperlukan
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.6),
+                                borderRadius: const BorderRadius.only(
+                                  bottomLeft: Radius.circular(12),
+                                  bottomRight: Radius.circular(12),
                                 ),
                               ),
-                              child: const Text('Tandai Selesai'),
+                              child: Center( // Tambahkan Center untuk memastikan tombol di tengah
+                                child: SizedBox(
+                                  width: double.infinity, // Membuat tombol mengisi lebar container
+                                  child: ElevatedButton(
+                                    onPressed: () => bookProvider.markAsFinished(book),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: const Text('Tandai Selesai'),
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ],
