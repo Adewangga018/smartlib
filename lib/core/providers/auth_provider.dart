@@ -22,6 +22,21 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
   }
 
+   Future<bool> resetPassword(String email) async {
+    _setLoading(true);
+    _setErrorMessage(null);
+
+    try {
+      await _authService.resetPassword(email);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setLoading(false);
+      _setErrorMessage(e.toString());
+      return false;
+    }
+  }
+
   Future<bool> login(String email, String password) async {
     _setLoading(true);
     _setErrorMessage(null);
