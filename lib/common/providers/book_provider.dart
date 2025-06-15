@@ -1,8 +1,18 @@
+// lib/common/providers/book_provider.dart
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smartlib/common/models/book_model.dart';
+import 'package:smartlib/firestore_service.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth; // <-- Import Firebase Auth
 
 class BookProvider with ChangeNotifier {
+  final FirestoreService _firestoreService;
+  final firebase_auth.FirebaseAuth _firebaseAuth; // <-- Tambahkan ini
+
+  // Constructor baru untuk menerima FirestoreService DAN FirebaseAuth
+  BookProvider(this._firestoreService, this._firebaseAuth); // <-- Ubah constructor
+
+  String? get _currentUserId => _firebaseAuth.currentUser?.uid; // <-- Getter untuk ID user
+
   final List<Book> _favoriteBooks = [];
   final List<Book> _toReadListBooks = [];
   final List<Book> _finishedBooks = [];
@@ -11,9 +21,21 @@ class BookProvider with ChangeNotifier {
   List<Book> get toReadListBooks => _toReadListBooks;
   List<Book> get finishedBooks => _finishedBooks;
 
-  // Constructor untuk memuat buku saat provider diinisialisasi
-  BookProvider() {
-    fetchBooksFromFirebase();
+  // Pastikan Anda memuat buku saat provider diinisialisasi atau saat user login
+  // Anda mungkin ingin memanggil fetchBooksFromFirebase() di sini atau di main.dart
+  // setelah user login.
+  void initializeBooks() {
+    _firebaseAuth.authStateChanges().listen((firebase_auth.User? firebaseUser) {
+      if (firebaseUser != null) {
+        fetchBooksFromFirebase(); // Muat buku saat user login
+      } else {
+        // Clear lists jika user logout
+        _favoriteBooks.clear();
+        _toReadListBooks.clear();
+        _finishedBooks.clear();
+        notifyListeners();
+      }
+    });
   }
 
   void toggleFavorite(Book book) {
@@ -29,141 +51,132 @@ class BookProvider with ChangeNotifier {
     return _favoriteBooks.any((b) => b.title == book.title);
   }
 
-  ///Tambahkan ke Firebase saat ditambahkan ke daftar baca
   void addToReadList(Book book) async {
-    if (!_toReadListBooks.any((b) => b.title == book.title)) {
+    final userId = _currentUserId;
+    if (userId == null) {
+      debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa menambahkan buku.");
+      return;
+    }
+
+    if (_toReadListBooks.any((b) => b.title == book.title)) {
+      debugPrint("⚠️ Buku '${book.title}' sudah ada di daftar baca lokal.");
+      return;
+    }
+
+    _toReadListBooks.add(book);
+    notifyListeners();
+
+    try {
+      await _firestoreService.saveBook(userId, book); // <-- Kirim userId
+      debugPrint("✅ Buku '${book.title}' berhasil disimpan ke Firestore untuk user $userId.");
+    } catch (e) {
+      debugPrint("❌ Gagal menyimpan buku '${book.title}' ke Firestore untuk user $userId: $e");
+      _toReadListBooks.removeWhere((b) => b.title == book.title);
+      notifyListeners();
+    }
+  }
+
+  void markAsFinished(Book book) {
+    final userId = _currentUserId;
+    if (userId == null) {
+      debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa memperbarui status buku.");
+      return;
+    }
+
+    final index = _toReadListBooks.indexWhere((b) => b.title == book.title);
+    if (index != -1) {
+      _toReadListBooks.removeAt(index);
+      _finishedBooks.add(book);
+      notifyListeners();
+
+      _firestoreService.updateBookStatus(userId, book.title, 'finished'); // <-- Kirim userId
+      debugPrint("✅ Buku '${book.title}' ditandai sebagai selesai untuk user $userId.");
+    } else {
+      debugPrint("⚠️ Buku '${book.title}' tidak ditemukan di daftar baca untuk ditandai selesai.");
+    }
+  }
+  
+  void unmarkAsFinished(Book book) {
+    final userId = _currentUserId;
+    if (userId == null) {
+      debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa membatalkan status selesai.");
+      return;
+    }
+
+
+    final index = _finishedBooks.indexWhere((b) => b.title == book.title);
+    if (index != -1) {
+      _finishedBooks.removeAt(index);
       _toReadListBooks.add(book);
       notifyListeners();
 
-      try {
-        await FirebaseFirestore.instance
-            .collection('books')
-            .doc(book.title) // gunakan title sebagai ID dokumen
-            .set(book.toMap()); // Menggunakan toMap() yang sudah diupdate
-        debugPrint("✅ Book berhasil ditambahkan ke Firestore: ${book.title}");
-      } catch (e) {
-        debugPrint("❌ Gagal menambahkan buku ke Firestore: $e");
-      }
+      _firestoreService.updateBookStatus(userId, book.title, 'to_read'); // <-- Kirim userId
+      debugPrint("✅ Buku '${book.title}' dikembalikan ke daftar baca untuk user $userId.");
+    } else {
+      debugPrint("⚠️ Buku '${book.title}' tidak ditemukan di daftar selesai untuk dikembalikan.");
     }
   }
 
-  /// Pindahkan buku dari "To-Read List" ke "Finished Books"
-  void markAsFinished(Book book) async {
-    _toReadListBooks.removeWhere((b) => b.title == book.title);
-    // Kita membuat instance baru dari Book untuk FinishedBooks agar tidak
-    // mengganggu referensi asli, terutama jika ada perubahan rating/review nantinya.
-    // Dan juga memastikan info dan sinopsisnya tetap ada.
-    final finishedBook = Book(
-      title: book.title,
-      author: book.author,
-      imageUrl: book.imageUrl,
-      synopsis: book.synopsis,
-      info: book.info,
-      rating: book.rating, // Pertahankan rating dan review yang sudah ada
-      reviewText: book.reviewText,
-    );
-
-    if (!_finishedBooks.any((b) => b.title == book.title)) {
-      _finishedBooks.add(finishedBook);
+  void addReview(Book book, int rating, String reviewText) {
+    final userId = _currentUserId;
+    if (userId == null) {
+      debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa menambahkan ulasan.");
+      return;
     }
-    notifyListeners();
 
-    // Perbarui status di Firestore
-    try {
-      await FirebaseFirestore.instance
-          .collection('books')
-          .doc(book.title)
-          .update({'status': 'finished'}); // Tambahkan field status
-      debugPrint("✅ Book ${book.title} ditandai selesai di Firestore.");
-    } catch (e) {
-      debugPrint("❌ Gagal menandai buku selesai di Firestore: $e");
-    }
-  }
-
-  /// Hapus buku dari "Finished Books" atau kembalikan ke To-Read List
-  void unmarkAsFinished(Book book) async {
-    _finishedBooks.removeWhere((b) => b.title == book.title);
-    // Kembalikan ke to-read list jika belum ada
-    final toReadBook = Book(
-      title: book.title,
-      author: book.author,
-      imageUrl: book.imageUrl,
-      synopsis: book.synopsis,
-      info: book.info,
-      rating: null, // Reset rating dan review saat dikembalikan ke to-read
-      reviewText: null,
-    );
-
-    if (!_toReadListBooks.any((b) => b.title == book.title)) {
-      _toReadListBooks.add(toReadBook);
-    }
-    notifyListeners();
-
-    // Perbarui status di Firestore
-    try {
-      await FirebaseFirestore.instance
-          .collection('books')
-          .doc(book.title)
-          .update({'status': 'to-read', 'rating': null, 'reviewText': null}); // Update status
-      debugPrint("✅ Book ${book.title} dikembalikan ke to-read di Firestore.");
-    } catch (e) {
-      debugPrint("❌ Gagal mengembalikan buku ke to-read di Firestore: $e");
-    }
-  }
-
-  void addReview(Book book, int rating, String reviewText) async {
-    // Cari buku di _finishedBooks
     int index = _finishedBooks.indexWhere((b) => b.title == book.title);
     if (index != -1) {
-      // Buat instance baru dengan rating dan review yang diupdate
-      final updatedBook = Book(
-        title: book.title,
-        author: book.author,
-        imageUrl: book.imageUrl,
-        synopsis: book.synopsis,
-        info: book.info,
-        rating: rating,
-        reviewText: reviewText,
-      );
-      _finishedBooks[index] = updatedBook; // Ganti objek lama dengan yang baru
+      _finishedBooks[index].rating = rating;
+      _finishedBooks[index].reviewText = reviewText;
       notifyListeners();
 
-      // Simpan perubahan review ke Firestore
-      try {
-        await FirebaseFirestore.instance
-            .collection('books')
-            .doc(book.title)
-            .update({
-          'rating': rating,
-          'reviewText': reviewText,
-        });
-        debugPrint("✅ Review untuk ${book.title} berhasil disimpan ke Firestore.");
-      } catch (e) {
-        debugPrint("❌ Gagal menyimpan review ke Firestore: $e");
-      }
+      _firestoreService.updateBookReview(userId, book.title, rating, reviewText); // <-- Kirim userId
+      debugPrint("✅ Ulasan untuk buku '${book.title}' berhasil ditambahkan/diperbarui untuk user $userId.");
+    } else {
+      debugPrint("⚠️ Buku '${book.title}' tidak ditemukan di daftar selesai untuk menambahkan ulasan.");
     }
   }
 
-  ///Ambil data dari Firestore ke `toReadListBooks` dan `finishedBooks`
   Future<void> fetchBooksFromFirebase() async {
+    final userId = _currentUserId;
+    if (userId == null) {
+      debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa mengambil buku dari Firebase.");
+      return;
+    }
+
     try {
-      final snapshot =
-          await FirebaseFirestore.instance.collection('books').get();
+      final List<Book> fetchedBooks = await _firestoreService.getAllBooks(userId); // <-- Kirim userId
       _toReadListBooks.clear();
-      _finishedBooks.clear(); // Bersihkan juga finishedBooks
-      for (var doc in snapshot.docs) {
-        final book = Book.fromMap(doc.data());
-        // Bedakan buku berdasarkan status
-        if (doc.data()['status'] == 'finished') {
+      _finishedBooks.clear();
+      for (var book in fetchedBooks) {
+        if (book.toMap().containsKey('status') && book.toMap()['status'] == 'finished') {
           _finishedBooks.add(book);
         } else {
           _toReadListBooks.add(book);
         }
       }
+      debugPrint("✅ Berhasil mengambil ${fetchedBooks.length} buku dari Firestore untuk user $userId.");
       notifyListeners();
-      debugPrint("✅ Data buku berhasil diambil dari Firebase.");
     } catch (e) {
-      debugPrint("❌ Gagal mengambil data dari Firebase: $e");
+      debugPrint("❌ Gagal mengambil data dari Firebase untuk user $userId: $e");
     }
   }
+  Future<void> removeFromToReadList(Book book) async {
+  final userId = _currentUserId;
+  if (userId == null) {
+    debugPrint("❌ Tidak ada user login.");
+    return;
+  }
+
+  _toReadListBooks.removeWhere((b) => b.title == book.title);
+  notifyListeners();
+
+  try {
+    await _firestoreService.deleteBook(userId, book.title); // pastikan method ini ada
+    debugPrint("✅ Buku '${book.title}' berhasil dihapus dari Firestore.");
+  } catch (e) {
+    debugPrint("❌ Gagal menghapus buku '${book.title}': $e");
+  }
+}
+
 }

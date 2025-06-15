@@ -40,45 +40,58 @@ class ToReadListScreen extends StatelessWidget {
                     itemCount: toReadBooks.length,
                     itemBuilder: (context, index) {
                       final book = toReadBooks[index];
-                      return Stack(
+                      return Column(
                         children: [
-                          BookCard(book: book), // BookCard sebagai dasar
+                          Expanded(child: BookCard(book: book)),
+                          const SizedBox(height: 4),
+                          Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    Expanded(
+      child: ElevatedButton(
+        onPressed: () => bookProvider.markAsFinished(book),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Text('Selesai'),
+      ),
+    ),
+    IconButton(
+      icon: const Icon(Icons.delete, color: Colors.red),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Konfirmasi'),
+            content: Text('Apakah Anda yakin ingin menghapus "${book.title}" dari daftar baca?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context), // Batal
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () async {
+                Navigator.pop(context); // Tutup dialog dulu
+                await bookProvider.removeFromToReadList(book); // Hapus buku
+              },
+                child: const Text(
+                  'Hapus',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    ),
+  ],
+),
 
-                          // Tombol "Tandai Selesai" ditempatkan di bawah kartu
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              // Tambahkan padding atau margin jika diperlukan
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.6),
-                                borderRadius: const BorderRadius.only(
-                                  bottomLeft: Radius.circular(12),
-                                  bottomRight: Radius.circular(12),
-                                ),
-                              ),
-                              child: Center( // Tambahkan Center untuk memastikan tombol di tengah
-                                child: SizedBox(
-                                  width: double.infinity, // Membuat tombol mengisi lebar container
-                                  child: ElevatedButton(
-                                    onPressed: () => bookProvider.markAsFinished(book),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    child: const Text('Tandai Selesai'),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
+                                  ],
+                                );
+                                ;
                     },
                   ),
           ),
