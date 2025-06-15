@@ -4,6 +4,7 @@ import 'package:smartlib/common/providers/book_provider.dart';
 import 'package:smartlib/common/theme/app_colors.dart';
 import 'package:smartlib/features/catalog/widgets/book_card.dart';
 import 'package:smartlib/features/to_read_list/screens/add_read_list_screen.dart';
+import 'package:smartlib/features/to_read_list/screens/edit_read_list_screen.dart';
 
 class ToReadListScreen extends StatelessWidget {
   const ToReadListScreen({super.key});
@@ -45,53 +46,61 @@ class ToReadListScreen extends StatelessWidget {
                           Expanded(child: BookCard(book: book)),
                           const SizedBox(height: 4),
                           Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    Expanded(
-      child: ElevatedButton(
-        onPressed: () => bookProvider.markAsFinished(book),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: const Text('Selesai'),
-      ),
-    ),
-    IconButton(
-      icon: const Icon(Icons.delete, color: Colors.red),
-      onPressed: () {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Konfirmasi'),
-            content: Text('Apakah Anda yakin ingin menghapus "${book.title}" dari daftar baca?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context), // Batal
-                child: const Text('Batal'),
-              ),
-              TextButton(
-                onPressed: () async {
-                Navigator.pop(context); // Tutup dialog dulu
-                await bookProvider.removeFromToReadList(book); // Hapus buku
-              },
-                child: const Text(
-                  'Hapus',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  ],
-),
-
-                                  ],
-                                );
-                                ;
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => bookProvider.markAsFinished(book),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  child: const Text('Selesai'),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => EditReadListScreen(book: book),
+                                    ),
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Konfirmasi'),
+                                      content: Text('Apakah Anda yakin ingin menghapus "${book.title}" dari daftar baca?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context), // Batal
+                                          child: const Text('Batal'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () async {
+                                            Navigator.pop(context); // Tutup dialog dulu
+                                            await bookProvider.removeFromToReadList(book); // Hapus buku
+                                          },
+                                          child: const Text(
+                                            'Hapus',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
                     },
                   ),
           ),
