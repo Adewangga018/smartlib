@@ -107,7 +107,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       controller: _photoUrlController,
                       decoration: const InputDecoration(
                         labelText: 'Profile Photo URL (Link)',
-                        hintText: 'e.g. https://drive.google.com/uc?export=view&id=YOUR_FILE_ID',
+                        hintText: 'e.g. https://i.imgur.com/C9KjwLE.jpeg',
                         border: OutlineInputBorder(),
                       ),
                     ),

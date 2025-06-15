@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smartlib/common/models/book_model.dart';
 
 class BookProvider with ChangeNotifier {
@@ -23,16 +24,29 @@ class BookProvider with ChangeNotifier {
     return _favoriteBooks.any((b) => b.title == book.title);
   }
 
-  void addToReadList(Book book) {
+  ///Tambahkan ke Firebase saat ditambahkan ke daftar baca
+  void addToReadList(Book book) async {
     if (!_toReadListBooks.any((b) => b.title == book.title)) {
       _toReadListBooks.add(book);
       notifyListeners();
+
+      try {
+        await FirebaseFirestore.instance
+            .collection('books')
+            .doc(book.title) // gunakan title sebagai ID dokumen
+            .set(book.toMap());
+      } catch (e) {
+        debugPrint("Gagal menyimpan buku ke Firebase: $e");
+      }
     }
   }
 
   void removeFromReadList(Book book) {
     _toReadListBooks.removeWhere((b) => b.title == book.title);
     notifyListeners();
+
+    //Hapus dari Firestore juga
+    FirebaseFirestore.instance.collection('books').doc(book.title).delete();
   }
 
   void markAsFinished(Book book) {
@@ -43,17 +57,13 @@ class BookProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // --- PERUBAHAN DI SINI: Fungsi baru untuk "Un-finish" ---
   void unmarkAsFinished(Book book) {
-    // Hapus dari daftar selesai
     _finishedBooks.removeWhere((b) => b.title == book.title);
-    // Tambahkan kembali ke daftar to-read jika belum ada
     if (!_toReadListBooks.any((b) => b.title == book.title)) {
       _toReadListBooks.add(book);
     }
     notifyListeners();
   }
-  // --- AKHIR PERUBAHAN ---
 
   void addReview(Book book, int rating, String reviewText) {
     int index = _finishedBooks.indexWhere((b) => b.title == book.title);
@@ -61,6 +71,41 @@ class BookProvider with ChangeNotifier {
       _finishedBooks[index].rating = rating;
       _finishedBooks[index].reviewText = reviewText;
       notifyListeners();
+
+      // Simpan perubahan review ke Firestore
+      FirebaseFirestore.instance
+          .collection('books')
+          .doc(book.title)
+          .update({
+        'rating': rating,
+        'reviewText': reviewText,
+      });
+    }
+  }
+
+  ///Ambil data dari Firestore ke `toReadListBooks`
+  Future<void> fetchBooksFromFirebase() async {
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('books').get();
+      _toReadListBooks.clear();
+      for (var doc in snapshot.docs) {
+        final book = Book.fromMap(doc.data());
+        _toReadListBooks.add(book);
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Gagal mengambil data dari Firebase: $e");
+    }
+  }
+
+  ///Sinkronisasi ulang semua data lokal ke Firebase
+  Future<void> syncToFirebase() async {
+    for (var book in _toReadListBooks) {
+      await FirebaseFirestore.instance
+          .collection('books')
+          .doc(book.title)
+          .set(book.toMap());
     }
   }
 }

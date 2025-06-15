@@ -18,5 +18,31 @@ class Book {
     this.rating,
     this.reviewText,
   });
+
+// Tambahan untuk menyimpan ke Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'author': author,
+      'imageUrl': imageUrl,
+      'synopsis': synopsis,
+      'info': info,
+      'rating': rating,
+      'reviewText': reviewText,
+    };
+  }
+
+  // Tambahan untuk mengambil dari Firestore
+  factory Book.fromMap(Map<String, dynamic> map) {
+    return Book(
+      title: map['title'] ?? '',
+      author: map['author'] ?? '',
+      imageUrl: map['imageUrl'] ?? '',
+      synopsis: map['synopsis'] ?? '',
+      info: map['info'] ?? '',
+      rating: map['rating'],
+      reviewText: map['reviewText'],
+    );
+  }
 }
 

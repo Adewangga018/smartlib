@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:smartlib/common/models/book_model.dart';
 import 'package:smartlib/common/providers/book_provider.dart';
 import 'package:smartlib/common/theme/app_colors.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddReadListScreen extends StatefulWidget {
   const AddReadListScreen({super.key});
@@ -14,16 +15,20 @@ class AddReadListScreen extends StatefulWidget {
 class _AddReadListScreenState extends State<AddReadListScreen> {
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
+  final _imageUrlController = TextEditingController();
 
   @override
   void dispose() {
     _titleController.dispose();
     _authorController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = _imageUrlController.text.trim();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -37,42 +42,51 @@ class _AddReadListScreenState extends State<AddReadListScreen> {
           children: [
             const Text('Cover Book', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            // --- PERUBAHAN DI SINI ---
-            // Ganti placeholder teks dengan ikon
-            InkWell(
+            GestureDetector(
               onTap: () {
-                // Nanti bisa ditambahkan fungsi untuk memilih gambar
-                print('Add cover tapped!');
+                _showImageLinkDialog(context);
               },
               child: Container(
-                height: 150,
+                height: 180,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Center(
-                  child: Icon(
-                    Icons.add_a_photo_outlined, // Ikon untuk menambah foto
-                    size: 50,
-                    color: Colors.grey,
-                  ),
-                ),
+                child: imageUrl.isNotEmpty
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.network(
+                          imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(child: Text('❌ Gagal memuat gambar'));
+                          },
+                        ),
+                      )
+                    : const Center(
+                        child: Icon(Icons.add_a_photo_outlined, size: 50, color: Colors.grey),
+                      ),
               ),
             ),
-            // --- AKHIR PERUBAHAN ---
             const SizedBox(height: 24),
             const Text('Book Information', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             TextFormField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _authorController,
-              decoration: const InputDecoration(labelText: 'Author', border: OutlineInputBorder()),
+              decoration: const InputDecoration(
+                labelText: 'Author',
+                border: OutlineInputBorder(),
+              ),
             ),
           ],
         ),
@@ -90,26 +104,7 @@ class _AddReadListScreenState extends State<AddReadListScreen> {
             const SizedBox(width: 16),
             Expanded(
               child: ElevatedButton(
-                onPressed: () {
-                  final title = _titleController.text;
-                  final author = _authorController.text;
-
-                  if (title.isNotEmpty && author.isNotEmpty) {
-                    final newBook = Book(
-                      title: title,
-                      author: author,
-                      imageUrl: '',
-                      synopsis: '',
-                      info: '',
-                    );
-                    Provider.of<BookProvider>(context, listen: false).addToReadList(newBook);
-                    Navigator.of(context).pop();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Judul dan Penulis tidak boleh kosong!'), duration: Duration(seconds: 2)),
-                    );
-                  }
-                },
+                onPressed: _saveBook,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBlue,
                   foregroundColor: Colors.white,
@@ -119,6 +114,92 @@ class _AddReadListScreenState extends State<AddReadListScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _saveBook() async {
+    final title = _titleController.text.trim();
+    final author = _authorController.text.trim();
+    final imageUrl = _imageUrlController.text.trim();
+
+    if (title.isEmpty || author.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Judul dan Penulis tidak boleh kosong!')),
+      );
+      return;
+    }
+
+    final newBook = Book(
+      title: title,
+      author: author,
+      imageUrl: imageUrl,
+      synopsis: '',
+      info: '',
+    );
+
+    Provider.of<BookProvider>(context, listen: false).addToReadList(newBook);
+
+    try {
+      await _saveBookToFirestore(newBook);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Buku berhasil disimpan ke Firebase!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal menyimpan ke Firebase: $e')),
+        );
+      }
+    }
+
+    Navigator.of(context).pop();
+  }
+
+  Future<void> _saveBookToFirestore(Book book) async {
+    await FirebaseFirestore.instance.collection('books').add({
+      'title': book.title,
+      'author': book.author,
+      'imageUrl': book.imageUrl,
+      'synopsis': book.synopsis,
+      'info': book.info,
+      'rating': book.rating,
+      'reviewText': book.reviewText,
+      'createdAt': Timestamp.now(),
+    });
+    debugPrint("✅ Book berhasil disimpan ke Firestore: ${book.title}");
+  }
+
+  void _showImageLinkDialog(BuildContext context) {
+    final tempController = TextEditingController(text: _imageUrlController.text);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Tambahkan Link Gambar'),
+        content: TextField(
+          controller: tempController,
+          decoration: const InputDecoration(
+            hintText: 'Paste link gambar di sini...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _imageUrlController.text = tempController.text.trim();
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Simpan'),
+          ),
+        ],
       ),
     );
   }
