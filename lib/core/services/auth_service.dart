@@ -9,6 +9,8 @@ class AuthService {
   Stream<fb_auth.User?> get userStream => _auth.authStateChanges();
   fb_auth.User? get currentUser => _auth.currentUser;
 
+  
+
   Future<fb_auth.User?> login(String email, String password) async {
     try {
       fb_auth.UserCredential result = await _auth.signInWithEmailAndPassword(
@@ -19,6 +21,22 @@ class AuthService {
     } catch (e) {
       print('Login error: $e');
       throw Exception('Login failed: ${e.toString()}');
+    }
+  }
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      print('Password reset email sent to $email');
+    } on fb_auth.FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-email') {
+        throw Exception('Email yang Anda masukkan tidak valid.');
+      } else if (e.code == 'user-not-found') {
+        throw Exception('Tidak ada pengguna dengan email tersebut.');
+      }
+      throw Exception('Gagal mengirim email reset password: ${e.message}');
+    } catch (e) {
+      print('Error sending password reset email: $e');
+      throw Exception('Terjadi kesalahan saat mengirim email reset password: ${e.toString()}');
     }
   }
 

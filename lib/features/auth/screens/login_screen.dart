@@ -1,11 +1,12 @@
+// lib/features/auth/screens/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smartlib/common/theme/app_colors.dart';
-import 'package:smartlib/core/providers/auth_provider.dart'; // Tambahkan ini
+import 'package:smartlib/core/providers/auth_provider.dart';
 import 'package:smartlib/features/auth/screens/signup_screen.dart';
 import 'package:smartlib/features/navigation/screens/main_screen.dart';
 
-class LoginScreen extends StatefulWidget { // Ubah ke StatefulWidget
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
@@ -22,6 +23,91 @@ class _LoginScreenState extends State<LoginScreen> {
     _passwordController.dispose();
     super.dispose();
   }
+
+  // --- START NEW CODE ---
+  void _showForgotPasswordDialog(BuildContext context) {
+    final TextEditingController forgotEmailController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        final authProvider = Provider.of<AuthProvider>(dialogContext, listen: false);
+        return AlertDialog(
+          title: const Text('Lupa Password?'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Masukkan email Anda untuk menerima link reset password.'),
+              const SizedBox(height: 16),
+              TextField(
+                controller: forgotEmailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              if (authProvider.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    authProvider.errorMessage!,
+                    style: const TextStyle(color: Colors.red, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                forgotEmailController.dispose();
+              },
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: authProvider.isLoading
+                  ? null
+                  : () async {
+                      final success = await authProvider.resetPassword(
+                        forgotEmailController.text.trim(),
+                      );
+                      if (dialogContext.mounted) {
+                        Navigator.of(dialogContext).pop(); // Close dialog immediately
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Link reset password telah dikirim ke ${forgotEmailController.text.trim()}'),
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        } else {
+                          // Error message is already handled by the provider and displayed in dialog if not closed immediately
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(authProvider.errorMessage ?? 'Gagal mengirim email reset password.'),
+                              backgroundColor: Colors.red,
+                              duration: const Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      }
+                      forgotEmailController.dispose();
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryBlue,
+                foregroundColor: Colors.white,
+              ),
+              child: authProvider.isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Kirim'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  // --- END NEW CODE ---
 
   @override
   Widget build(BuildContext context) {
@@ -45,22 +131,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
-                    labelText: 'Email', 
-                    hintText: 'Enter Email', 
-                    border: OutlineInputBorder(), 
-                    filled: true, 
+                    labelText: 'Email',
+                    hintText: 'Enter Email',
+                    border: OutlineInputBorder(),
+                    filled: true,
                     fillColor: Colors.white
                   ),
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _passwordController,
-                  obscureText: true, 
+                  obscureText: true,
                   decoration: const InputDecoration(
-                    labelText: 'Password', 
-                    hintText: 'Enter Password', 
-                    border: OutlineInputBorder(), 
-                    filled: true, 
+                    labelText: 'Password',
+                    hintText: 'Enter Password',
+                    border: OutlineInputBorder(),
+                    filled: true,
                     fillColor: Colors.white
                   ),
                 ),
@@ -73,8 +159,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 const SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: authProvider.isLoading 
-                    ? null 
+                  onPressed: authProvider.isLoading
+                    ? null
                     : () async {
                         final success = await authProvider.login(
                           _emailController.text.trim(),
@@ -97,7 +183,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () {}, 
+                  onPressed: () {
+                    // --- START MODIFIED CODE ---
+                    _showForgotPasswordDialog(context);
+                    // --- END MODIFIED CODE ---
+                  },
                   child: const Text('Lupa Password?', style: TextStyle(color: AppColors.darkBlueText, fontWeight: FontWeight.bold))
                 ),
                 const SizedBox(height: 20),
