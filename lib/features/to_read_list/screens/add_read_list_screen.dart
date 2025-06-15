@@ -38,6 +38,7 @@ class _AddReadListScreenState extends State<AddReadListScreen> {
         synopsis: _synopsisController.text.trim(),
         info: _infoController.text.trim(),
         rating: null,
+        status: 'to_read',
         reviewText: null,
       );
 

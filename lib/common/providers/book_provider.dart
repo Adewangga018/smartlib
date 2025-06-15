@@ -95,13 +95,14 @@ class BookProvider with ChangeNotifier {
       debugPrint("⚠️ Buku '${book.title}' tidak ditemukan di daftar baca untuk ditandai selesai.");
     }
   }
-
+  
   void unmarkAsFinished(Book book) {
     final userId = _currentUserId;
     if (userId == null) {
       debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa membatalkan status selesai.");
       return;
     }
+
 
     final index = _finishedBooks.indexWhere((b) => b.title == book.title);
     if (index != -1) {
@@ -160,4 +161,22 @@ class BookProvider with ChangeNotifier {
       debugPrint("❌ Gagal mengambil data dari Firebase untuk user $userId: $e");
     }
   }
+  Future<void> removeFromToReadList(Book book) async {
+  final userId = _currentUserId;
+  if (userId == null) {
+    debugPrint("❌ Tidak ada user login.");
+    return;
+  }
+
+  _toReadListBooks.removeWhere((b) => b.title == book.title);
+  notifyListeners();
+
+  try {
+    await _firestoreService.deleteBook(userId, book.title); // pastikan method ini ada
+    debugPrint("✅ Buku '${book.title}' berhasil dihapus dari Firestore.");
+  } catch (e) {
+    debugPrint("❌ Gagal menghapus buku '${book.title}': $e");
+  }
+}
+
 }

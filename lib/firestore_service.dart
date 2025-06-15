@@ -26,7 +26,7 @@ class FirestoreService {
       return null;
     }
   }
-
+  
   Future<void> updateUserData(User user) async {
     if (user.id.isEmpty) {
       throw Exception('User ID is missing for update operation.');

@@ -23,20 +23,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
       builder: (context, bookProvider, child) {
         // Gabungkan buku dari toReadListBooks dan finishedBooks
         // Pastikan tidak ada duplikasi jika buku ada di kedua list (walaupun seharusnya tidak)
-        final allBooks = [...bookProvider.toReadListBooks, ...bookProvider.finishedBooks];
-
-        // Hapus duplikasi jika ada (berdasarkan title)
-        final uniqueBooks = <String, Book>{};
-        for (var book in allBooks) {
-          uniqueBooks[book.title] = book;
-        }
-        final List<Book> booksToDisplay = uniqueBooks.values.toList();
-
+        final allBooks = bookProvider.finishedBooks.where((book) => book.reviewText != null && book.reviewText!.isNotEmpty).toList();
 
         // Filter buku berdasarkan rating
         final filteredBooks = selectedRating == null
-            ? booksToDisplay // Gunakan data dari provider
-            : booksToDisplay.where((book) => book.rating == selectedRating).toList();
+        ? allBooks
+        : allBooks.where((book) => book.rating == selectedRating).toList();
+
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -63,53 +56,80 @@ class _CatalogScreenState extends State<CatalogScreen> {
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Filter berdasarkan Rating:',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
-                    DropdownButton<int?>(
-                      value: selectedRating,
-                      onChanged: (int? newValue) {
-                        setState(() {
-                          selectedRating = newValue;
-                        });
-                      },
-                      hint: const Text('Pilih Rating'),
-                      icon: const Icon(Icons.arrow_drop_down),
-                      iconSize: 24,
-                      elevation: 16,
-                      style: const TextStyle(color: Colors.deepPurple),
-                      underline: const SizedBox(),
-                      items: [
-                        const DropdownMenuItem<int?>(
-                          value: null,
-                          child: Text('Semua'),
-                        ),
-                        ...List.generate(5, (index) {
-                          final ratingValue = index + 1;
-                          return DropdownMenuItem<int?>(
-                            value: ratingValue,
-                            child: Row(
-                              children: List.generate(
-                                ratingValue,
-                                (_) => const Icon(Icons.star, size: 16, color: Colors.orange),
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-                  ],
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    const Text(
+      'Filter Rating',
+      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+    ),
+    Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: AppColors.primaryBlue),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<int?>(
+          value: selectedRating,
+          icon: const Icon(Icons.arrow_drop_down, color: AppColors.primaryBlue),
+          onChanged: (int? newValue) {
+            setState(() {
+              selectedRating = newValue;
+            });
+          },
+          items: [
+            const DropdownMenuItem<int?>(
+              value: null,
+              child: Text('Semua'),
+            ),
+            ...List.generate(5, (index) {
+              final ratingValue = index + 1;
+              return DropdownMenuItem<int?>(
+                value: ratingValue,
+                child: Row(
+                  children: List.generate(
+                    ratingValue,
+                    (_) => const Icon(Icons.star, size: 16, color: Colors.orange),
+                  ),
                 ),
+              );
+            }),
+          ],
+        ),
+      ),
+    ),
+  ],
+),
                 const SizedBox(height: 16),
+                const SizedBox(height: 16),
+                const Divider(thickness: 1.2),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Daftar Buku',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Expanded(
                   child: filteredBooks.isEmpty
-                      ? const Center(
-                          child: Text('Tidak ada buku di katalog ini.'),
-                        )
-                      : GridView.builder(
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.menu_book_outlined, size: 60, color: Colors.grey),
+                              SizedBox(height: 12),
+                              Text(
+                                'Belum ada buku dengan rating tersebut.',
+                                style: TextStyle(color: Colors.grey, fontSize: 14),
+                              ),
+                            ],
+                          ),
+                      )
+                      : 
+                      GridView.builder(
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 16,
@@ -118,9 +138,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           ),
                           itemCount: filteredBooks.length,
                           itemBuilder: (context, index) {
-                            final book = filteredBooks[index];
-                            return BookCard(book: book);
-                          },
+                          final book = filteredBooks[index];
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            child: BookCard(book: book),
+                          );
+                        }
                         ),
                 ),
               ],
