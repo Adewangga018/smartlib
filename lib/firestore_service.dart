@@ -1,20 +1,15 @@
 // lib/firestore_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:smartlib/common/models/user_model.dart';
-import 'package:smartlib/common/models/book_model.dart'; // Pastikan ini ada
+import 'package:smartlib/common/models/book_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // CollectionReference untuk data pengguna
   CollectionReference<Map<String, dynamic>> get _usersCollection =>
       _db.collection('users');
 
-  // CollectionReference baru untuk data buku
-  CollectionReference<Map<String, dynamic>> get _booksCollection =>
-      _db.collection('books');
-
-  // --- FUNGSI UNTUK USER ---
+  // --- FUNGSI UNTUK USER (TETAP SAMA) ---
   Future<void> saveUserData(User user) async {
     await _usersCollection.doc(user.id).set(user.toFirestore());
   }
@@ -49,15 +44,12 @@ class FirestoreService {
     }
   }
 
-  // --- PERUBAHAN DI SINI: updateUserProfilePhoto menerima String? ---
   Future<void> updateUserProfilePhoto(String uid, String? photoUrl) async {
     try {
       if (photoUrl == null || photoUrl.isEmpty) {
-        // Jika URL kosong atau null, hapus field 'profilePhotoUrl' dari Firestore
         await _usersCollection.doc(uid).update({'profilePhotoUrl': FieldValue.delete()});
         print('User profile photo removed for $uid.');
       } else {
-        // Jika ada URL, perbarui field 'profilePhotoUrl'
         await _usersCollection.doc(uid).update({'profilePhotoUrl': photoUrl});
         print('User profile photo updated for $uid.');
       }
@@ -67,59 +59,66 @@ class FirestoreService {
     }
   }
 
-  // --- FUNGSI UNTUK BUKU (Pastikan ini ada) ---
-  Future<void> saveBook(Book book) async {
+  // --- FUNGSI UNTUK BUKU (PERUBAHAN BESAR DI SINI) ---
+
+  // Getter untuk koleksi buku yang spesifik per pengguna
+  // Kini membutuhkan userId untuk mengetahui di bawah user mana buku tersebut
+  CollectionReference<Map<String, dynamic>> _userBooksCollection(String userId) {
+    return _usersCollection.doc(userId).collection('books');
+  }
+
+  Future<void> saveBook(String userId, Book book) async { // <-- Tambah userId
     try {
-      await _booksCollection.doc(book.title).set(book.toMap());
-      print('Book "${book.title}" saved/updated in Firestore.');
+      await _userBooksCollection(userId).doc(book.title).set(book.toMap());
+      print('Book "${book.title}" saved/updated for user $userId in Firestore.');
     } catch (e) {
-      print('Error saving/updating book "${book.title}": $e');
+      print('Error saving/updating book "${book.title}" for user $userId: $e');
       rethrow;
     }
   }
 
-  Future<List<Book>> getAllBooks() async {
+  Future<List<Book>> getAllBooks(String userId) async { // <-- Tambah userId
     try {
-      final querySnapshot = await _booksCollection.get();
+      final querySnapshot = await _userBooksCollection(userId).get();
       return querySnapshot.docs
           .map((doc) => Book.fromMap(doc.data()))
           .toList();
     } catch (e) {
-      print('Error getting all books: $e');
+      print('Error getting all books for user $userId: $e');
       rethrow;
     }
   }
 
-  Future<void> updateBookStatus(String bookTitle, String status) async {
+  Future<void> updateBookStatus(String userId, String bookTitle, String status) async { // <-- Tambah userId
     try {
-      await _booksCollection.doc(bookTitle).update({'status': status});
-      print('Book "${bookTitle}" status updated to "$status".');
+      await _userBooksCollection(userId).doc(bookTitle).update({'status': status});
+      print('Book "${bookTitle}" status updated to "$status" for user $userId.');
     } catch (e) {
-      print('Error updating book status for "${bookTitle}": $e');
+      print('Error updating book status for "${bookTitle}" for user $userId: $e');
       rethrow;
     }
   }
 
   Future<void> updateBookReview(
-      String bookTitle, int rating, String reviewText) async {
+      String userId, String bookTitle, int rating, String reviewText) async { // <-- Tambah userId
     try {
-      await _booksCollection.doc(bookTitle).update({
+      await _userBooksCollection(userId).doc(bookTitle).update({
         'rating': rating,
         'reviewText': reviewText,
       });
-      print('Book "${bookTitle}" review updated.');
+      print('Book "${bookTitle}" review updated for user $userId.');
     } catch (e) {
-      print('Error updating book review for "${bookTitle}": $e');
+      print('Error updating book review for "${bookTitle}" for user $userId: $e');
       rethrow;
     }
   }
 
-  Future<void> deleteBook(String bookTitle) async {
+  Future<void> deleteBook(String userId, String bookTitle) async { // <-- Tambah userId
     try {
-      await _booksCollection.doc(bookTitle).delete();
-      print('Book "${bookTitle}" deleted from Firestore.');
+      await _userBooksCollection(userId).doc(bookTitle).delete();
+      print('Book "${bookTitle}" deleted for user $userId from Firestore.');
     } catch (e) {
-      print('Error deleting book "${bookTitle}": $e');
+      print('Error deleting book "${bookTitle}" for user $userId: $e');
       rethrow;
     }
   }
