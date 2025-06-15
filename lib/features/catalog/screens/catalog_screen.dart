@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import Provider
 import 'package:smartlib/common/models/book_model.dart';
+import 'package:smartlib/common/providers/book_provider.dart'; // Import BookProvider
 import 'package:smartlib/common/theme/app_colors.dart';
 import 'package:smartlib/features/catalog/widgets/book_card.dart';
 import 'package:smartlib/features/profile/screens/profile_screen.dart';
@@ -15,155 +17,117 @@ class _CatalogScreenState extends State<CatalogScreen> {
   int? selectedRating; // null means show all
   bool isDropdownOpen = false;
 
-  final List<Book> dummyBooks = [
-    Book(
-      title: 'Bumi',
-      author: 'Tere Liye',
-      imageUrl: 'assets/images/bumi.jpg',
-      synopsis:
-          'Kisah ini tentang Raib, seorang gadis berusia 15 tahun yang sama seperti remaja lainnya. Namun, ada satu rahasia yang ia simpan sendiri sejak kecil: Ia bisa menghilang. Dengan bantuan teman-temannya, Seli dan Ali, Raib berpetualang ke dunia paralel yang tidak pernah ia duga keberadaannya.',
-      info: '• Penerbit: Gramedia\n• Halaman: 440\n• Terbit: Januari 2014',
-      rating: 5,
-    ),
-    Book(
-      title: 'Rembulan Tenggelam di Wajahmu',
-      author: 'Tere Liye',
-      imageUrl: 'assets/images/rembulan.jpg',
-      synopsis:
-          'Kisah tentang Rehan, seorang pria 60 tahun yang terbaring di rumah sakit. Saat ia mempertanyakan hidupnya, datanglah seseorang dengan wajah teduh yang mengajukan lima pertanyaan. Pertanyaan-pertanyaan ini membawanya kembali menelusuri potongan-potongan hidupnya yang penuh makna.',
-      info: '• Penerbit: Republika\n• Halaman: 424\n• Terbit: 2006',
-      rating: 4,
-    ),
-    Book(
-      title: 'Hujan',
-      author: 'Tere Liye',
-      imageUrl: 'assets/images/hujan.jpg',
-      synopsis:
-          'Ini bukan tentang cinta biasa, ini tentang persahabatan, melupakan, dan hujan. Lail, seorang gadis yang menjadi yatim piatu akibat bencana alam, harus menjalani hidup di dunia yang super canggih. Di tengah perjalanannya, ia bertemu Esok, anak laki-laki jenius yang menjadi teman spesialnya.',
-      info: '• Penerbit: Gramedia\n• Halaman: 320\n• Terbit: Januari 2016',
-      rating: 3,
-    ),
-    Book(
-      title: 'Negeri Para Bedebah',
-      author: 'Tere Liye',
-      imageUrl: 'assets/images/negeri.jpg',
-      synopsis:
-          'Sebuah novel action-financial thriller tentang Thomas, seorang konsultan keuangan yang sangat cerdas. Ketika sebuah bank besar di ambang kehancuran, Thomas harus berpacu dengan waktu untuk menyelamatkannya, membongkar konspirasi besar yang melibatkan orang-orang paling berkuasa.',
-      info: '• Penerbit: Gramedia\n• Halaman: 440\n• Terbit: 2012',
-      rating: 5,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final filteredBooks = selectedRating == null
-        ? dummyBooks
-        : dummyBooks.where((book) => book.rating == selectedRating).toList();
+    return Consumer<BookProvider>( // Gunakan Consumer untuk mendengarkan perubahan pada BookProvider
+      builder: (context, bookProvider, child) {
+        // Gabungkan buku dari toReadListBooks dan finishedBooks
+        // Pastikan tidak ada duplikasi jika buku ada di kedua list (walaupun seharusnya tidak)
+        final allBooks = [...bookProvider.toReadListBooks, ...bookProvider.finishedBooks];
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Katalog', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        foregroundColor: AppColors.darkBlueText,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline, size: 30),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const ProfileScreen()),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Search',
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-              ),
+        // Hapus duplikasi jika ada (berdasarkan title)
+        final uniqueBooks = <String, Book>{};
+        for (var book in allBooks) {
+          uniqueBooks[book.title] = book;
+        }
+        final List<Book> booksToDisplay = uniqueBooks.values.toList();
+
+
+        // Filter buku berdasarkan rating
+        final filteredBooks = selectedRating == null
+            ? booksToDisplay // Gunakan data dari provider
+            : booksToDisplay.where((book) => book.rating == selectedRating).toList();
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text(
+              'Katalog Buku',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person, color: AppColors.primaryBlue),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  );
+                },
+              ),
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isDropdownOpen = !isDropdownOpen;
-                    });
-                  },
-                  child: Row(
-                    children: const [
-                      Icon(Icons.filter_list, color: AppColors.darkBlueText),
-                      SizedBox(width: 8),
-                      Text('Filter', style: TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                ),
-                DropdownButton<int?>(
-                  hint: const Text("Rating"),
-                  value: selectedRating,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedRating = value;
-                      isDropdownOpen = false;
-                    });
-                  },
-                  underline: const SizedBox(),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('Semua'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Filter berdasarkan Rating:',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                     ),
-                    ...List.generate(5, (index) {
-                      final ratingValue = index + 1;
-                      return DropdownMenuItem<int?>(
-                        value: ratingValue,
-                        child: Row(
-                          children: List.generate(
-                            ratingValue,
-                            (_) => const Icon(Icons.star, size: 16, color: Colors.orange),
-                          ),
+                    DropdownButton<int?>(
+                      value: selectedRating,
+                      onChanged: (int? newValue) {
+                        setState(() {
+                          selectedRating = newValue;
+                        });
+                      },
+                      hint: const Text('Pilih Rating'),
+                      icon: const Icon(Icons.arrow_drop_down),
+                      iconSize: 24,
+                      elevation: 16,
+                      style: const TextStyle(color: Colors.deepPurple),
+                      underline: const SizedBox(),
+                      items: [
+                        const DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text('Semua'),
                         ),
-                      );
-                    }),
+                        ...List.generate(5, (index) {
+                          final ratingValue = index + 1;
+                          return DropdownMenuItem<int?>(
+                            value: ratingValue,
+                            child: Row(
+                              children: List.generate(
+                                ratingValue,
+                                (_) => const Icon(Icons.star, size: 16, color: Colors.orange),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: filteredBooks.isEmpty
+                      ? const Center(
+                          child: Text('Tidak ada buku di katalog ini.'),
+                        )
+                      : GridView.builder(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.65,
+                          ),
+                          itemCount: filteredBooks.length,
+                          itemBuilder: (context, index) {
+                            final book = filteredBooks[index];
+                            return BookCard(book: book);
+                          },
+                        ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.65,
-                ),
-                itemCount: filteredBooks.length,
-                itemBuilder: (context, index) {
-                  final book = filteredBooks[index];
-                  return BookCard(book: book);
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

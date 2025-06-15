@@ -1,3 +1,4 @@
+// book_card.dart (Tidak ada perubahan signifikan yang diperlukan)
 import 'package:flutter/material.dart';
 import 'package:smartlib/common/models/book_model.dart';
 import 'package:smartlib/common/theme/app_colors.dart';
@@ -11,12 +12,9 @@ class BookCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget imageWidget;
 
-    // --- PERUBAHAN DI SINI: Tambah kondisi untuk URL kosong ---
     if (book.imageUrl.isEmpty) {
-      // Jika URL kosong, tampilkan ikon placeholder
       imageWidget = const Center(child: Icon(Icons.book_outlined, color: Colors.grey, size: 80));
     } else if (book.imageUrl.startsWith('http')) {
-      // Jika link web, gunakan Image.network
       imageWidget = Image.network(
         book.imageUrl,
         fit: BoxFit.cover,
@@ -29,24 +27,22 @@ class BookCard extends StatelessWidget {
         },
       );
     } else {
-      // Jika bukan, anggap itu aset lokal dan gunakan Image.asset
       imageWidget = Image.asset(
         book.imageUrl,
         fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(child: Icon(Icons.book, color: Colors.grey, size: 50));
+        },
       );
     }
-    // --- AKHIR PERUBAHAN ---
 
     return GestureDetector(
       onTap: () {
-        // Jangan buka detail jika buku tidak punya sinopsis (buku manual)
-        if (book.synopsis.isNotEmpty) {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => BookDetailScreen(book: book),
-            ),
-          );
-        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => BookDetailScreen(book: book),
+          ),
+        );
       },
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +51,7 @@ class BookCard extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.grey[200], // Beri warna dasar untuk placeholder
+                color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(

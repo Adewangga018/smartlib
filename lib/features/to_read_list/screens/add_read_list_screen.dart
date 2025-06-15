@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart'; // <-- TAMBAHKAN BARIS INI
 import 'package:smartlib/common/models/book_model.dart';
 import 'package:smartlib/common/providers/book_provider.dart';
 import 'package:smartlib/common/theme/app_colors.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddReadListScreen extends StatefulWidget {
   const AddReadListScreen({super.key});
@@ -13,163 +12,43 @@ class AddReadListScreen extends StatefulWidget {
 }
 
 class _AddReadListScreenState extends State<AddReadListScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
   final _imageUrlController = TextEditingController();
+  final _synopsisController = TextEditingController();
+  final _infoController = TextEditingController();
 
   @override
   void dispose() {
     _titleController.dispose();
     _authorController.dispose();
     _imageUrlController.dispose();
+    _synopsisController.dispose();
+    _infoController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final imageUrl = _imageUrlController.text.trim();
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Add Read-List'),
-        backgroundColor: AppColors.background,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Cover Book', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () {
-                _showImageLinkDialog(context);
-              },
-              child: Container(
-                height: 180,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: imageUrl.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(child: Text('❌ Gagal memuat gambar'));
-                          },
-                        ),
-                      )
-                    : const Center(
-                        child: Icon(Icons.add_a_photo_outlined, size: 50, color: Colors.grey),
-                      ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text('Book Information', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _authorController,
-              decoration: const InputDecoration(
-                labelText: 'Author',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Discard'),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: _saveBook,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Save'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _saveBook() async {
-    final title = _titleController.text.trim();
-    final author = _authorController.text.trim();
-    final imageUrl = _imageUrlController.text.trim();
-
-    if (title.isEmpty || author.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Judul dan Penulis tidak boleh kosong!')),
+  void _addBook() {
+    if (_formKey.currentState!.validate()) {
+      final newBook = Book(
+        title: _titleController.text.trim(),
+        author: _authorController.text.trim(),
+        imageUrl: _imageUrlController.text.trim(),
+        synopsis: _synopsisController.text.trim(),
+        info: _infoController.text.trim(),
+        rating: null,
+        reviewText: null,
       );
-      return;
+
+      Provider.of<BookProvider>(context, listen: false).addToReadList(newBook);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('"${newBook.title}" berhasil ditambahkan!')),
+      );
+
+      Navigator.of(context).pop();
     }
-
-    final newBook = Book(
-      title: title,
-      author: author,
-      imageUrl: imageUrl,
-      synopsis: '',
-      info: '',
-    );
-
-    Provider.of<BookProvider>(context, listen: false).addToReadList(newBook);
-
-    try {
-      await _saveBookToFirestore(newBook);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Buku berhasil disimpan ke Firebase!')),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal menyimpan ke Firebase: $e')),
-        );
-      }
-    }
-
-    Navigator.of(context).pop();
-  }
-
-  Future<void> _saveBookToFirestore(Book book) async {
-    await FirebaseFirestore.instance.collection('books').add({
-      'title': book.title,
-      'author': book.author,
-      'imageUrl': book.imageUrl,
-      'synopsis': book.synopsis,
-      'info': book.info,
-      'rating': book.rating,
-      'reviewText': book.reviewText,
-      'createdAt': Timestamp.now(),
-    });
-    debugPrint("✅ Book berhasil disimpan ke Firestore: ${book.title}");
   }
 
   void _showImageLinkDialog(BuildContext context) {
@@ -197,9 +76,179 @@ class _AddReadListScreenState extends State<AddReadListScreen> {
               });
               Navigator.pop(context);
             },
-            child: const Text('Simpan'),
+            child: const Text('Tambah'),
           ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = _imageUrlController.text.trim();
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Add Read-List'),
+        backgroundColor: AppColors.background,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Judul Buku', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  hintText: 'Masukkan judul buku',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Judul buku tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              const Text('Penulis', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _authorController,
+                decoration: const InputDecoration(
+                  hintText: 'Masukkan nama penulis',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Nama penulis tidak boleh kosong';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              const Text('Link Gambar Cover (Opsional)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _imageUrlController,
+                      decoration: const InputDecoration(
+                        hintText: 'URL Gambar',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      readOnly: true,
+                      onTap: () => _showImageLinkDialog(context),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.add_link),
+                    onPressed: () => _showImageLinkDialog(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (imageUrl.isNotEmpty && imageUrl.startsWith('http'))
+                Container(
+                  height: 150,
+                  width: 100,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                      ),
+                    ),
+                  ),
+                )
+              else if (imageUrl.isNotEmpty && !imageUrl.startsWith('http'))
+                Container(
+                  height: 150,
+                  width: 100,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Center(
+                        child: Icon(Icons.broken_image, color: Colors.grey, size: 40),
+                      ),
+                    ),
+                  ),
+                ),
+
+              const Text('Sinopsis', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _synopsisController,
+                maxLines: 5,
+                decoration: const InputDecoration(
+                  hintText: 'Masukkan sinopsis buku',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text('Informasi Buku (Penerbit, Halaman, dll.)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _infoController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Contoh: Penerbit: Gramedia, Halaman: 300, Terbit: 2023',
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _addBook,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Tambahkan ke daftar baca',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

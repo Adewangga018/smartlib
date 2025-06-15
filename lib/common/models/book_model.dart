@@ -3,8 +3,8 @@ class Book {
   final String author;
   final String imageUrl;
   // --- PERUBAHAN DI SINI ---
-  final String synopsis;
-  final String info; // Info seperti penerbit, halaman, tahun terbit
+  final String synopsis; // Properti baru untuk sinopsis
+  final String info;     // Properti baru untuk info buku (penerbit, halaman, dll)
   int? rating;
   String? reviewText;
 
@@ -13,8 +13,8 @@ class Book {
     required this.author,
     required this.imageUrl,
     // Tambahkan properti baru ke constructor
-    required this.synopsis,
-    required this.info,
+    required this.synopsis, // Wajib diisi
+    required this.info,     // Wajib diisi
     this.rating,
     this.reviewText,
   });
@@ -25,8 +25,8 @@ class Book {
       'title': title,
       'author': author,
       'imageUrl': imageUrl,
-      'synopsis': synopsis,
-      'info': info,
+      'synopsis': synopsis,   // Tambahkan ke map
+      'info': info,           // Tambahkan ke map
       'rating': rating,
       'reviewText': reviewText,
     };
@@ -38,11 +38,10 @@ class Book {
       title: map['title'] ?? '',
       author: map['author'] ?? '',
       imageUrl: map['imageUrl'] ?? '',
-      synopsis: map['synopsis'] ?? '',
-      info: map['info'] ?? '',
+      synopsis: map['synopsis'] ?? '', // Ambil dari map
+      info: map['info'] ?? '',         // Ambil dari map
       rating: map['rating'],
       reviewText: map['reviewText'],
     );
   }
 }
-
