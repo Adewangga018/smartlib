@@ -178,5 +178,14 @@ class BookProvider with ChangeNotifier {
     debugPrint("❌ Gagal menghapus buku '${book.title}': $e");
   }
 }
-
+  Future<void> updateToReadBook(Book oldBook, Book updatedBook) async {
+    final userId = _currentUserId;
+    if (userId == null) return;
+    final index = _toReadListBooks.indexWhere((b) => b.title == oldBook.title);
+    if (index != -1) {
+      _toReadListBooks[index] = updatedBook;
+      notifyListeners();
+      await _firestoreService.saveBook(userId, updatedBook);
+    }
+  }
 }
