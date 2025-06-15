@@ -4,41 +4,61 @@ import 'package:smartlib/common/theme/app_colors.dart';
 import 'package:smartlib/features/catalog/widgets/book_card.dart';
 import 'package:smartlib/features/profile/screens/profile_screen.dart';
 
-class CatalogScreen extends StatelessWidget {
+class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
 
   @override
+  State<CatalogScreen> createState() => _CatalogScreenState();
+}
+
+class _CatalogScreenState extends State<CatalogScreen> {
+  int? selectedRating; // null means show all
+  bool isDropdownOpen = false;
+
+  final List<Book> dummyBooks = [
+    Book(
+      title: 'Bumi',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/bumi.jpg',
+      synopsis:
+          'Kisah ini tentang Raib, seorang gadis berusia 15 tahun yang sama seperti remaja lainnya. Namun, ada satu rahasia yang ia simpan sendiri sejak kecil: Ia bisa menghilang. Dengan bantuan teman-temannya, Seli dan Ali, Raib berpetualang ke dunia paralel yang tidak pernah ia duga keberadaannya.',
+      info: '• Penerbit: Gramedia\n• Halaman: 440\n• Terbit: Januari 2014',
+      rating: 5,
+    ),
+    Book(
+      title: 'Rembulan Tenggelam di Wajahmu',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/rembulan.jpg',
+      synopsis:
+          'Kisah tentang Rehan, seorang pria 60 tahun yang terbaring di rumah sakit. Saat ia mempertanyakan hidupnya, datanglah seseorang dengan wajah teduh yang mengajukan lima pertanyaan. Pertanyaan-pertanyaan ini membawanya kembali menelusuri potongan-potongan hidupnya yang penuh makna.',
+      info: '• Penerbit: Republika\n• Halaman: 424\n• Terbit: 2006',
+      rating: 4,
+    ),
+    Book(
+      title: 'Hujan',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/hujan.jpg',
+      synopsis:
+          'Ini bukan tentang cinta biasa, ini tentang persahabatan, melupakan, dan hujan. Lail, seorang gadis yang menjadi yatim piatu akibat bencana alam, harus menjalani hidup di dunia yang super canggih. Di tengah perjalanannya, ia bertemu Esok, anak laki-laki jenius yang menjadi teman spesialnya.',
+      info: '• Penerbit: Gramedia\n• Halaman: 320\n• Terbit: Januari 2016',
+      rating: 3,
+    ),
+    Book(
+      title: 'Negeri Para Bedebah',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/negeri.jpg',
+      synopsis:
+          'Sebuah novel action-financial thriller tentang Thomas, seorang konsultan keuangan yang sangat cerdas. Ketika sebuah bank besar di ambang kehancuran, Thomas harus berpacu dengan waktu untuk menyelamatkannya, membongkar konspirasi besar yang melibatkan orang-orang paling berkuasa.',
+      info: '• Penerbit: Gramedia\n• Halaman: 440\n• Terbit: 2012',
+      rating: 5,
+    ),
+  ];
+
+  @override
   Widget build(BuildContext context) {
-    final List<Book> dummyBooks = [
-      Book(
-        title: 'Bumi',
-        author: 'Tere Liye',
-        imageUrl: 'assets/images/bumi.jpg',
-        synopsis: 'Kisah ini tentang Raib, seorang gadis berusia 15 tahun yang sama seperti remaja lainnya. Namun, ada satu rahasia yang ia simpan sendiri sejak kecil: Ia bisa menghilang. Dengan bantuan teman-temannya, Seli dan Ali, Raib berpetualang ke dunia paralel yang tidak pernah ia duga keberadaannya.',
-        info: '• Penerbit: Gramedia Pustaka Utama\n• Halaman: 440\n• Terbit: Januari 2014',
-      ),
-      Book(
-        title: 'Rembulan Tenggelam di Wajahmu',
-        author: 'Tere Liye',
-        imageUrl: 'assets/images/rembulan.jpg',
-        synopsis: 'Kisah tentang Rehan, seorang pria 60 tahun yang terbaring di rumah sakit. Saat ia mempertanyakan hidupnya, datanglah seseorang dengan wajah teduh yang mengajukan lima pertanyaan. Pertanyaan-pertanyaan ini membawanya kembali menelusuri potongan-potongan hidupnya yang penuh makna.',
-        info: '• Penerbit: Republika Penerbit\n• Halaman: 424\n• Terbit: 2006',
-      ),
-      Book(
-        title: 'Hujan',
-        author: 'Tere Liye',
-        imageUrl: 'assets/images/hujan.jpg',
-        synopsis: 'Ini bukan tentang cinta biasa, ini tentang persahabatan, melupakan, dan hujan. Lail, seorang gadis yang menjadi yatim piatu akibat bencana alam, harus menjalani hidup di dunia yang super canggih. Di tengah perjalanannya, ia bertemu Esok, anak laki-laki jenius yang menjadi teman spesialnya.',
-        info: '• Penerbit: Gramedia Pustaka Utama\n• Halaman: 320\n• Terbit: Januari 2016',
-      ),
-      Book(
-        title: 'Negeri Para Bedebah',
-        author: 'Tere Liye',
-        imageUrl: 'assets/images/negeri.jpg',
-        synopsis: 'Sebuah novel action-financial thriller tentang Thomas, seorang konsultan keuangan yang sangat cerdas. Ketika sebuah bank besar di ambang kehancuran, Thomas harus berpacu dengan waktu untuk menyelamatkannya, membongkar konspirasi besar yang melibatkan orang-orang paling berkuasa.',
-        info: '• Penerbit: Gramedia Pustaka Utama\n• Halaman: 440\n• Terbit: 2012',
-      ),
-    ];
+    final filteredBooks = selectedRating == null
+        ? dummyBooks
+        : dummyBooks.where((book) => book.rating == selectedRating).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -47,8 +67,7 @@ class CatalogScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         foregroundColor: AppColors.darkBlueText,
-        // --- PERUBAHAN DI SINI ---
-        automaticallyImplyLeading: false, // Menghilangkan tombol kembali
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.person_outline, size: 30),
@@ -79,10 +98,51 @@ class CatalogScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.filter_list, color: AppColors.darkBlueText),
-                const SizedBox(width: 8),
-                const Text('Filter', style: TextStyle(fontWeight: FontWeight.bold)),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      isDropdownOpen = !isDropdownOpen;
+                    });
+                  },
+                  child: Row(
+                    children: const [
+                      Icon(Icons.filter_list, color: AppColors.darkBlueText),
+                      SizedBox(width: 8),
+                      Text('Filter', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                DropdownButton<int?>(
+                  hint: const Text("Rating"),
+                  value: selectedRating,
+                  onChanged: (value) {
+                    setState(() {
+                      selectedRating = value;
+                      isDropdownOpen = false;
+                    });
+                  },
+                  underline: const SizedBox(),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Semua'),
+                    ),
+                    ...List.generate(5, (index) {
+                      final ratingValue = index + 1;
+                      return DropdownMenuItem<int?>(
+                        value: ratingValue,
+                        child: Row(
+                          children: List.generate(
+                            ratingValue,
+                            (_) => const Icon(Icons.star, size: 16, color: Colors.orange),
+                          ),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -94,9 +154,9 @@ class CatalogScreen extends StatelessWidget {
                   mainAxisSpacing: 16,
                   childAspectRatio: 0.65,
                 ),
-                itemCount: dummyBooks.length,
+                itemCount: filteredBooks.length,
                 itemBuilder: (context, index) {
-                  final book = dummyBooks[index];
+                  final book = filteredBooks[index];
                   return BookCard(book: book);
                 },
               ),
