@@ -5,6 +5,8 @@ import 'package:smartlib/common/theme/app_colors.dart';
 import 'package:smartlib/features/catalog/widgets/book_card.dart';
 import 'package:smartlib/features/to_read_list/screens/add_read_list_screen.dart';
 import 'package:smartlib/features/to_read_list/screens/edit_read_list_screen.dart';
+import 'package:smartlib/features/to_read_list/screens/choose_book_source_dialog.dart';
+import 'package:smartlib/features/to_read_list/screens/add_from_catalog_screen.dart';
 
 class ToReadListScreen extends StatelessWidget {
   const ToReadListScreen({super.key});
@@ -105,10 +107,20 @@ class ToReadListScreen extends StatelessWidget {
                   ),
           ),
           floatingActionButton: FloatingActionButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const AddReadListScreen()),
+            onPressed: () async {
+              final result = await showDialog<String>(
+                context: context,
+                builder: (context) => const ChooseBookSourceDialog(),
               );
+              if (result == 'new') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const AddReadListScreen()),
+                );
+              } else if (result == 'catalog') {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const AddFromCatalogScreen()),
+                );
+              }
             },
             backgroundColor: AppColors.primaryBlue,
             child: const Icon(Icons.add, color: Colors.white),
