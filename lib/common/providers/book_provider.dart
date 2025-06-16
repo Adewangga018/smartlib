@@ -21,6 +21,140 @@ class BookProvider with ChangeNotifier {
   List<Book> get toReadListBooks => _toReadListBooks;
   List<Book> get finishedBooks => _finishedBooks;
 
+  // Buku default untuk katalog
+  final List<Book> _defaultCatalogBooks = [
+    Book(
+      title: 'Laskar Pelangi',
+      author: 'Andrea Hirata',
+      imageUrl: 'assets/images/laskarpelangi.jpg',
+      status: 'catalog',
+      synopsis: 'Kisah inspiratif anak-anak Belitung yang penuh semangat belajar.',
+      info: 'Penerbit: Bentang Pustaka, 529 halaman',
+    ),
+    Book(
+      title: 'Bumi',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/bumi.jpg',
+      status: 'catalog',
+      synopsis: 'Petualangan fantasi remaja dengan dunia paralel.',
+      info: 'Penerbit: Gramedia, 440 halaman',
+    ),
+    Book(
+      title: 'Hujan',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/hujan.jpg',
+      status: 'catalog',
+      synopsis: 'Novel tentang cinta, kehilangan, dan bencana.',
+      info: 'Penerbit: Gramedia, 320 halaman',
+    ),
+    Book(
+      title: 'Rembulan Tenggelam di Wajahmu',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/rembulan.jpg',
+      status: 'catalog',
+      synopsis: 'Perjalanan spiritual dan makna kehidupan.',
+      info: 'Penerbit: Republika, 400 halaman',
+    ),
+    Book(
+      title: 'Negeri 5 Menara',
+      author: 'Ahmad Fuadi',
+      imageUrl: 'assets/images/negeri5menara.jpg',
+      status: 'catalog',
+      synopsis: 'Perjuangan santri di pondok pesantren dengan mimpi besar.',
+      info: 'Penerbit: Gramedia, 424 halaman',
+    ),
+    Book(
+      title: 'Ayat-Ayat Cinta',
+      author: 'Habiburrahman El Shirazy',
+      imageUrl: 'assets/images/ayatcinta.jpg',
+      status: 'catalog',
+      synopsis: 'Kisah cinta dan perjuangan mahasiswa Indonesia di Mesir.',
+      info: 'Penerbit: Republika, 418 halaman',
+    ),
+    Book(
+      title: 'Dilan: Dia adalah Dilanku Tahun 1990',
+      author: 'Pidi Baiq',
+      imageUrl: 'assets/images/dilan.jpg',
+      status: 'catalog',
+      synopsis: 'Romansa remaja Bandung tahun 90-an.',
+      info: 'Penerbit: Pastel Books, 332 halaman',
+    ),
+    Book(
+      title: 'Perahu Kertas',
+      author: 'Dee Lestari',
+      imageUrl: 'assets/images/perahukertas.jpg',
+      status: 'catalog',
+      synopsis: 'Kisah cinta dan pencarian jati diri dua anak muda.',
+      info: 'Penerbit: Bentang Pustaka, 444 halaman',
+    ),
+    Book(
+      title: 'Supernova: Ksatria, Puteri, dan Bintang Jatuh',
+      author: 'Dee Lestari',
+      imageUrl: 'assets/images/supernova.jpg',
+      status: 'catalog',
+      synopsis: 'Novel filsafat, cinta, dan sains yang memikat.',
+      info: 'Penerbit: Truedee Books, 352 halaman',
+    ),
+    Book(
+      title: 'Cantik Itu Luka',
+      author: 'Eka Kurniawan',
+      imageUrl: 'assets/images/cantikituluka.jpg',
+      status: 'catalog',
+      synopsis: 'Sebuah saga keluarga dan sejarah Indonesia.',
+      info: 'Penerbit: Gramedia, 520 halaman',
+    ),
+    Book(
+      title: 'Pulang',
+      author: 'Leila S. Chudori',
+      imageUrl: 'assets/images/pulang.jpg',
+      status: 'catalog',
+      synopsis: 'Kisah eksil politik Indonesia di Paris.',
+      info: 'Penerbit: KPG, 464 halaman',
+    ),
+    Book(
+      title: 'Orang-Orang Biasa',
+      author: 'Andrea Hirata',
+      imageUrl: 'assets/images/orangbiasa.jpg',
+      status: 'catalog',
+      synopsis: 'Petualangan kocak dan penuh makna dari orang-orang biasa.',
+      info: 'Penerbit: Bentang Pustaka, 296 halaman',
+    ),
+    Book(
+      title: 'Rectoverso',
+      author: 'Dee Lestari',
+      imageUrl: 'assets/images/rectoverso.jpg',
+      status: 'catalog',
+      synopsis: 'Kumpulan cerita dan lagu tentang cinta dan kehilangan.',
+      info: 'Penerbit: Bentang Pustaka, 232 halaman',
+    ),
+    Book(
+      title: 'Sang Pemimpi',
+      author: 'Andrea Hirata',
+      imageUrl: 'assets/images/sangpemimpi.jpg',
+      status: 'catalog',
+      synopsis: 'Lanjutan kisah Laskar Pelangi tentang mimpi dan harapan.',
+      info: 'Penerbit: Bentang Pustaka, 292 halaman',
+    ),
+    Book(
+      title: 'Negeri Para Bedebah',
+      author: 'Tere Liye',
+      imageUrl: 'assets/images/bedebah.jpg',
+      status: 'catalog',
+      synopsis: 'Thriller ekonomi dan politik Indonesia.',
+      info: 'Penerbit: Gramedia, 440 halaman',
+    ),
+    Book(
+      title: 'Koala Kumal',
+      author: 'Raditya Dika',
+      imageUrl: 'assets/images/koalakumal.jpg',
+      status: 'catalog',
+      synopsis: 'Kumpulan cerita lucu dan reflektif tentang cinta.',
+      info: 'Penerbit: GagasMedia, 250 halaman',
+    ),
+  ];
+
+  List<Book> get defaultCatalogBooks => _defaultCatalogBooks;
+
   // Pastikan Anda memuat buku saat provider diinisialisasi atau saat user login
   // Anda mungkin ingin memanggil fetchBooksFromFirebase() di sini atau di main.dart
   // setelah user login.

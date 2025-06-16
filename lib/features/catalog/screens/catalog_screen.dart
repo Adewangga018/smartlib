@@ -21,14 +21,19 @@ class _CatalogScreenState extends State<CatalogScreen> {
   Widget build(BuildContext context) {
     return Consumer<BookProvider>( // Gunakan Consumer untuk mendengarkan perubahan pada BookProvider
       builder: (context, bookProvider, child) {
-        // Gabungkan buku dari toReadListBooks dan finishedBooks
-        // Pastikan tidak ada duplikasi jika buku ada di kedua list (walaupun seharusnya tidak)
-        final allBooks = bookProvider.finishedBooks.where((book) => book.reviewText != null && book.reviewText!.isNotEmpty).toList();
+        // Gabungkan buku dari defaultCatalogBooks, toReadListBooks, dan finishedBooks
+        // Jika ada buku dengan judul sama, prioritas data dari defaultCatalogBooks (agar imageUrl asset tidak tertimpa data kosong dari Firestore)
+        final Map<String, Book> bookMap = {
+          for (var b in bookProvider.finishedBooks) b.title: b,
+          for (var b in bookProvider.toReadListBooks) b.title: b,
+          for (var b in bookProvider.defaultCatalogBooks) b.title: b,
+        };
+        final uniqueBooks = bookMap.values.toList();
 
         // Filter buku berdasarkan rating
         final filteredBooks = selectedRating == null
-        ? allBooks
-        : allBooks.where((book) => book.rating == selectedRating).toList();
+            ? uniqueBooks
+            : uniqueBooks.where((book) => (book.rating ?? 0) == selectedRating).toList();
 
 
         return Scaffold(
