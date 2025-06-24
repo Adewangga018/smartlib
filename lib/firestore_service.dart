@@ -26,6 +26,19 @@ class FirestoreService {
       return null;
     }
   }
+
+  Future<void> saveFavorites(String userId, List<String> titles) async {
+  final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
+  await userDoc.set({'favorites': titles}, SetOptions(merge: true));
+  }
+
+  Future<List<String>> getFavorites(String userId) async {
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (userDoc.exists && userDoc.data()?['favorites'] != null) {
+      return List<String>.from(userDoc.data()!['favorites']);
+    }
+    return [];
+  }
   
   Future<void> updateUserData(User user) async {
     if (user.id.isEmpty) {

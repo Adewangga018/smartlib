@@ -7,6 +7,7 @@ import 'package:smartlib/features/to_read_list/screens/add_read_list_screen.dart
 import 'package:smartlib/features/to_read_list/screens/edit_read_list_screen.dart';
 import 'package:smartlib/features/to_read_list/screens/choose_book_source_dialog.dart';
 import 'package:smartlib/features/to_read_list/screens/add_from_catalog_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class ToReadListScreen extends StatelessWidget {
   const ToReadListScreen({super.key});
@@ -15,96 +16,149 @@ class ToReadListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<BookProvider>(
       builder: (context, bookProvider, child) {
-        // Ambil buku dari toReadListBooks
         final toReadBooks = bookProvider.toReadListBooks;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Colors.transparent,
           appBar: AppBar(
-            title: const Text('To-read List', style: TextStyle(fontWeight: FontWeight.bold)),
-            backgroundColor: AppColors.background,
-            elevation: 0,
-            foregroundColor: AppColors.darkBlueText,
-            automaticallyImplyLeading: false, // Menghilangkan tombol kembali
+            backgroundColor: Colors.white,
+            elevation: 2,
+            automaticallyImplyLeading: false,
+            title: Text(
+              'Daftar Baca',
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryBlue,
+              ),
+            ),
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: toReadBooks.isEmpty
-                ? const Center(
-                    child: Text('Daftar baca Anda masih kosong.'),
-                  )
-                : GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.65,
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFE0F7FA), Color(0xFFF3E5F5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                // Section Title
+                Row(
+                  children: [
+                    const Icon(Icons.menu_book, color: AppColors.primaryBlue),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Buku yang Ingin Dibaca',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryBlue,
+                      ),
                     ),
-                    itemCount: toReadBooks.length,
-                    itemBuilder: (context, index) {
-                      final book = toReadBooks[index];
-                      return Column(
-                        children: [
-                          Expanded(child: BookCard(book: book)),
-                          const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () => bookProvider.markAsFinished(book),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  ),
-                                  child: const Text('Selesai'),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // Grid/List of Books
+                Expanded(
+                  child: toReadBooks.isEmpty
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.library_books_outlined, size: 60, color: Colors.grey),
+                            const SizedBox(height: 12),
+                            Text(
+                              'Daftar baca Anda masih kosong.',
+                              style: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
+                            ),
+                          ],
+                        )
+                      : GridView.builder(
+                          itemCount: toReadBooks.length,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 0.65,
+                          ),
+                          itemBuilder: (context, index) {
+                            final book = toReadBooks[index];
+                            return Stack(
+                              children: [
+                                // BookCard
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: BookCard(book: book),
                                 ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) => EditReadListScreen(book: book),
-                                    ),
-                                  );
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text('Konfirmasi'),
-                                      content: Text('Apakah Anda yakin ingin menghapus "${book.title}" dari daftar baca?'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context), // Batal
-                                          child: const Text('Batal'),
-                                        ),
-                                        TextButton(
-                                          onPressed: () async {
-                                            Navigator.pop(context); // Tutup dialog dulu
-                                            await bookProvider.removeFromToReadList(book); // Hapus buku
-                                          },
-                                          child: const Text(
-                                            'Hapus',
-                                            style: TextStyle(color: Colors.red),
+                                // Action Buttons
+                                Positioned(
+                                  bottom: 8,
+                                  left: 8,
+                                  right: 8,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      // Button selesai
+                                      ElevatedButton(
+                                        onPressed: () => bookProvider.markAsFinished(book),
+                                        style: ElevatedButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          backgroundColor: Colors.green,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+                                        child: const Text('Selesai', style: TextStyle(fontSize: 12)),
+                                      ),
+                                      // Icon edit
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+                                        onPressed: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => EditReadListScreen(book: book),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      // Icon delete
+                                      IconButton(
+                                        icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text('Konfirmasi'),
+                                              content: Text('Hapus "${book.title}" dari daftar baca?'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  child: const Text('Batal'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () async {
+                                                    Navigator.pop(context);
+                                                    await bookProvider.removeFromToReadList(book);
+                                                  },
+                                                  child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
           ),
           floatingActionButton: FloatingActionButton(
             onPressed: () async {

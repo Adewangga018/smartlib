@@ -124,21 +124,36 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
         ),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
-          onPressed: () {
-            Provider.of<BookProvider>(context, listen: false)
-                .addReview(widget.book, _rating, _reviewController.text);
-            Navigator.of(context).pop();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryBlue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-          ),
-          child: const Text('Kirim', style: TextStyle(fontSize: 18)),
+      padding: const EdgeInsets.all(16.0),
+      child: ElevatedButton(
+        onPressed: () {
+          Provider.of<BookProvider>(context, listen: false)
+              .addReview(widget.book, _rating, _reviewController.text);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                widget.book.reviewText == null
+                  ? '✅ Ulasan berhasil dikirim!'
+                  : '✅ Ulasan berhasil diperbarui!',
+              ),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          Navigator.of(context).pop();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primaryBlue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        child: Text(
+          widget.book.reviewText == null ? 'Kirim' : 'Perbarui Ulasan',
+          style: const TextStyle(fontSize: 18),
         ),
       ),
+    ),
     );
   }
 }

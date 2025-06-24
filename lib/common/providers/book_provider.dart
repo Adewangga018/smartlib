@@ -162,6 +162,7 @@ class BookProvider with ChangeNotifier {
     _firebaseAuth.authStateChanges().listen((firebase_auth.User? firebaseUser) {
       if (firebaseUser != null) {
         fetchBooksFromFirebase(); // Muat buku saat user login
+        loadFavoritesFromFirestore();
       } else {
         // Clear lists jika user logout
         _favoriteBooks.clear();
@@ -173,13 +174,15 @@ class BookProvider with ChangeNotifier {
   }
 
   void toggleFavorite(Book book) {
-    if (isFavorite(book)) {
-      _favoriteBooks.removeWhere((b) => b.title == book.title);
-    } else {
-      _favoriteBooks.add(book);
-    }
-    notifyListeners();
+  if (isFavorite(book)) {
+    _favoriteBooks.removeWhere((b) => b.title == book.title);
+  } else {
+    _favoriteBooks.add(book);
   }
+  saveFavoritesToFirestore(); // <-- tambahkan ini
+  notifyListeners();
+}
+
 
   bool isFavorite(Book book) {
     return _favoriteBooks.any((b) => b.title == book.title);
@@ -252,24 +255,42 @@ class BookProvider with ChangeNotifier {
   }
 
   void addReview(Book book, int rating, String reviewText) {
-    final userId = _currentUserId;
-    if (userId == null) {
-      debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa menambahkan ulasan.");
-      return;
-    }
-
-    int index = _finishedBooks.indexWhere((b) => b.title == book.title);
-    if (index != -1) {
-      _finishedBooks[index].rating = rating;
-      _finishedBooks[index].reviewText = reviewText;
-      notifyListeners();
-
-      _firestoreService.updateBookReview(userId, book.title, rating, reviewText); // <-- Kirim userId
-      debugPrint("✅ Ulasan untuk buku '${book.title}' berhasil ditambahkan/diperbarui untuk user $userId.");
-    } else {
-      debugPrint("⚠️ Buku '${book.title}' tidak ditemukan di daftar selesai untuk menambahkan ulasan.");
-    }
+  final userId = _currentUserId;
+  if (userId == null) {
+    debugPrint("❌ Tidak ada pengguna yang login. Tidak bisa menambahkan ulasan.");
+    return;
   }
+
+  // Update di finishedBooks
+  final indexFinished = finishedBooks.indexWhere((b) => b.title == book.title);
+  if (indexFinished != -1) {
+    finishedBooks[indexFinished].rating = rating;
+    finishedBooks[indexFinished].reviewText = reviewText;
+  }
+
+  // Update juga di defaultCatalogBooks supaya filter katalog bisa mengenali
+  final indexCatalog = defaultCatalogBooks.indexWhere((b) => b.title == book.title);
+  if (indexCatalog != -1) {
+    defaultCatalogBooks[indexCatalog].rating = rating;
+    defaultCatalogBooks[indexCatalog].reviewText = reviewText;
+  }
+
+  // Update langsung pada instance book juga
+  book.rating = rating;
+  book.reviewText = reviewText;
+
+  notifyListeners();
+
+  // 💾 Simpan ke Firestore
+  try {
+    _firestoreService.saveBook(userId, book);
+    debugPrint("✅ Review berhasil disimpan ke Firestore untuk buku '${book.title}'");
+  } catch (e) {
+    debugPrint("❌ Gagal menyimpan review ke Firestore untuk '${book.title}': $e");
+  }
+}
+
+
 
   Future<void> fetchBooksFromFirebase() async {
     final userId = _currentUserId;
@@ -295,6 +316,44 @@ class BookProvider with ChangeNotifier {
       debugPrint("❌ Gagal mengambil data dari Firebase untuk user $userId: $e");
     }
   }
+
+  Future<void> saveFavoritesToFirestore() async {
+  final userId = _currentUserId;
+  if (userId == null) return;
+
+  final favoriteTitles = _favoriteBooks.map((book) => book.title).toList();
+
+  try {
+    await _firestoreService.saveFavorites(userId, favoriteTitles);
+    debugPrint("✅ Favorite books saved to Firestore for user $userId.");
+  } catch (e) {
+    debugPrint("❌ Failed to save favorites: $e");
+  }
+}
+
+Future<void> loadFavoritesFromFirestore() async {
+  final userId = _currentUserId;
+  if (userId == null) return;
+
+  try {
+    final favoriteTitles = await _firestoreService.getFavorites(userId);
+
+    // Gabungkan semua list buku (default + yang dari firestore)
+    final allBooks = [..._defaultCatalogBooks, ..._toReadListBooks, ..._finishedBooks];
+
+    _favoriteBooks.clear();
+    for (var title in favoriteTitles) {
+      final match = allBooks.firstWhere((b) => b.title == title, orElse: () => Book(title: '', author: '', imageUrl: '', status: '', synopsis: '', info: ''));
+      if (match.title.isNotEmpty) _favoriteBooks.add(match);
+    }
+    notifyListeners();
+    debugPrint("✅ Favorite books loaded from Firestore for user $userId.");
+  } catch (e) {
+    debugPrint("❌ Failed to load favorites: $e");
+  }
+}
+
+
   Future<void> removeFromToReadList(Book book) async {
   final userId = _currentUserId;
   if (userId == null) {
