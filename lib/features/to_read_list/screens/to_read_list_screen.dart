@@ -8,6 +8,7 @@ import 'package:smartlib/features/to_read_list/screens/edit_read_list_screen.dar
 import 'package:smartlib/features/to_read_list/screens/choose_book_source_dialog.dart';
 import 'package:smartlib/features/to_read_list/screens/add_from_catalog_screen.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smartlib/features/profile/screens/profile_screen.dart';
 
 class ToReadListScreen extends StatelessWidget {
   const ToReadListScreen({super.key});
@@ -31,6 +32,16 @@ class ToReadListScreen extends StatelessWidget {
                 color: AppColors.primaryBlue,
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person, color: AppColors.primaryBlue),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  );
+                },
+              ),
+            ],
           ),
           body: Container(
             decoration: const BoxDecoration(
