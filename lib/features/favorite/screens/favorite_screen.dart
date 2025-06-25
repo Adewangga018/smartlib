@@ -39,29 +39,37 @@ class FavoriteScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: favoriteBooks.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Anda belum punya buku favorit.',
-                      style: TextStyle(fontSize: 16),
+          body: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFE0F7FA), Color(0xFFF3E5F5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: favoriteBooks.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'Anda belum punya buku favorit.',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    )
+                  : GridView.builder(
+                      itemCount: favoriteBooks.length,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.6,
+                      ),
+                      itemBuilder: (context, index) {
+                        final book = favoriteBooks[index];
+                        return BookCard(book: book);
+                      },
                     ),
-                  )
-                : GridView.builder(
-                    itemCount: favoriteBooks.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.6, // 🔧 Lebih tinggi dari sebelumnya (0.65 → 0.6)
-                    ),
-
-                    itemBuilder: (context, index) {
-                      final book = favoriteBooks[index];
-                      return BookCard(book: book);
-                    },
-                  ),
+            ),
           ),
         );
       },

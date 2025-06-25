@@ -9,109 +9,118 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Logo besar di tengah
-              Image.asset(
-                'assets/images/logo.png',
-                height: 200,
-              ),
-              const SizedBox(height: 40),
-              
-              // Judul aplikasi
-              const Text(
-                'SmartLib',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkBlueText,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE0F7FA), Color(0xFFF3E5F5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Logo besar di tengah
+                Image.asset(
+                  'assets/images/logo.png',
+                  height: 200,
                 ),
-              ),
-              const SizedBox(height: 8),
-              
-              // Tagline
-              const Text(
-                'Your Smart Library Solution',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: AppColors.lightBlueText,
-                ),
-              ),
-              const SizedBox(height: 40),
-              
-              // Deskripsi fitur
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.0),
-                child: Text(
-                  'Akses ribuan buku digital, manajemen peminjaman, dan fitur canggih lainnya dalam genggaman Anda',
-                  textAlign: TextAlign.center,
+                const SizedBox(height: 40),
+                
+                // Judul aplikasi
+                const Text(
+                  'SmartLib',
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.darkBlueText,
                   ),
                 ),
-              ),
-              const SizedBox(height: 60),
-              
-              // Tombol Login
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const LoginScreen()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                const SizedBox(height: 8),
+                
+                // Tagline
+                const Text(
+                  'Your Smart Library Solution',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.lightBlueText,
                   ),
-                  child: const Text(
-                    'Login',
+                ),
+                const SizedBox(height: 40),
+                
+                // Deskripsi fitur
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Text(
+                    'Akses ribuan buku digital, manajemen peminjaman, dan fitur canggih lainnya dalam genggaman Anda',
+                    textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
+                      fontSize: 14,
+                      color: Colors.grey,
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Tombol Register
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                    );
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 60),
+                
+                // Tombol Login
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
-                    side: const BorderSide(color: AppColors.primaryBlue),
-                  ),
-                  child: const Text(
-                    'Register',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: AppColors.primaryBlue,
+                    child: const Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                
+                // Tombol Register
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: const BorderSide(color: AppColors.primaryBlue),
+                    ),
+                    child: const Text(
+                      'Register',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: AppColors.primaryBlue,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
