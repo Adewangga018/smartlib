@@ -57,7 +57,7 @@ class LandingPage extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.0),
                   child: Text(
-                    'Akses ribuan buku digital, manajemen peminjaman, dan fitur canggih lainnya dalam genggaman Anda',
+                    'Kelola koleksi bacaan pribadi Anda, atur daftar bacaan, dan temukan fitur pintar lainnya dalam satu aplikasi.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14,
