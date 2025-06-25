@@ -123,17 +123,18 @@ class ToReadListScreen extends StatelessWidget {
                                         ),
                                         child: const Text('Selesai', style: TextStyle(fontSize: 12)),
                                       ),
-                                      // Icon edit
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => EditReadListScreen(book: book),
-                                            ),
-                                          );
-                                        },
-                                      ),
+                                      // Icon edit hanya jika bukan dari katalog
+                                      if (book.status != 'catalog')
+                                        IconButton(
+                                          icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => EditReadListScreen(book: book),
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       // Icon delete
                                       IconButton(
                                         icon: const Icon(Icons.delete, size: 20, color: Colors.red),
