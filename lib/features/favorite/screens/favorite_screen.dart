@@ -4,6 +4,7 @@ import 'package:smartlib/common/providers/book_provider.dart';
 import 'package:smartlib/common/theme/app_colors.dart';
 import 'package:smartlib/features/catalog/widgets/book_card.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:smartlib/features/profile/screens/profile_screen.dart';
 
 class FavoriteScreen extends StatelessWidget {
   const FavoriteScreen({super.key});
@@ -27,6 +28,16 @@ class FavoriteScreen extends StatelessWidget {
                 color: AppColors.primaryBlue,
               ),
             ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.person, color: AppColors.primaryBlue),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                  );
+                },
+              ),
+            ],
           ),
           body: Padding(
             padding: const EdgeInsets.all(16.0),
