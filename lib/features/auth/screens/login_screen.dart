@@ -114,96 +114,105 @@ class _LoginScreenState extends State<LoginScreen> {
     final authProvider = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 40.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Image.asset('assets/images/logo.png', height: 100),
-                const SizedBox(height: 16),
-                const Text('Login', textAlign: TextAlign.center, style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.darkBlueText)),
-                const Text('SmartLib', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, color: AppColors.lightBlueText, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 40),
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'Enter Email',
-                    border: OutlineInputBorder(),
-                    filled: true,
-                    fillColor: Colors.white
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter Password',
-                    border: OutlineInputBorder(),
-                    filled: true,
-                    fillColor: Colors.white
-                  ),
-                ),
-                const SizedBox(height: 30),
-                if (authProvider.errorMessage != null)
-                  Text(
-                    authProvider.errorMessage!,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: authProvider.isLoading
-                    ? null
-                    : () async {
-                        final success = await authProvider.login(
-                          _emailController.text.trim(),
-                          _passwordController.text.trim(),
-                        );
-                        if (success && mounted) {
-                          Navigator.of(context).pushReplacement(
-                            MaterialPageRoute(builder: (context) => const MainScreen()),
-                          );
-                        }
-                      },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: authProvider.isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white)),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    // --- START MODIFIED CODE ---
-                    _showForgotPasswordDialog(context);
-                    // --- END MODIFIED CODE ---
-                  },
-                  child: const Text('Lupa Password?', style: TextStyle(color: AppColors.darkBlueText, fontWeight: FontWeight.bold))
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Belum punya akun?"),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SignUpScreen()));
-                      },
-                      child: const Text('Sign Up', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE0F7FA), Color(0xFFF3E5F5)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 40.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Image.asset('assets/images/logo.png', height: 100),
+                  const SizedBox(height: 16),
+                  const Text('Login', textAlign: TextAlign.center, style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.darkBlueText)),
+                  const Text('SmartLib', textAlign: TextAlign.center, style: TextStyle(fontSize: 24, color: AppColors.lightBlueText, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 40),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'Enter Email',
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.white
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 20),
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Enter Password',
+                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.white
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  if (authProvider.errorMessage != null)
+                    Text(
+                      authProvider.errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: authProvider.isLoading
+                      ? null
+                      : () async {
+                          final success = await authProvider.login(
+                            _emailController.text.trim(),
+                            _passwordController.text.trim(),
+                          );
+                          if (success && mounted) {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (context) => const MainScreen()),
+                            );
+                          }
+                        },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: authProvider.isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white)),
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () {
+                      // --- START MODIFIED CODE ---
+                      _showForgotPasswordDialog(context);
+                      // --- END MODIFIED CODE ---
+                    },
+                    child: const Text('Lupa Password?', style: TextStyle(color: AppColors.darkBlueText, fontWeight: FontWeight.bold))
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text("Belum punya akun?"),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SignUpScreen()));
+                        },
+                        child: const Text('Sign Up', style: TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
