@@ -1,16 +1,28 @@
-# smartlib
+# 📚 SmartLib
 
-A new Flutter project.
+## 🎯 Judul Proyek  
+**SmartLib - Aplikasi Manajemen Buku Pribadi**
 
-## Getting Started
+## 📝 Deskripsi Singkat  
+SmartLib adalah aplikasi Flutter yang dirancang untuk membantu pengguna mengelola koleksi buku bacaan mereka. Aplikasi ini menyediakan fitur pencarian buku berdasarkan judul atau penulis, filter berdasarkan rating, serta tampilan katalog buku dalam format grid yang menarik.
 
-This project is a starting point for a Flutter application.
+## 🚀 Cara Menjalankan Program
 
-A few resources to get you started if this is your first Flutter project:
+### Persyaratan Sistem
+Pastikan sudah menginstal:
+- Flutter SDK (https://flutter.dev/docs/get-started/install)
+- Android Studio / VS Code
+- Emulator atau perangkat Android
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Langkah-langkah Eksekusi
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# 1. Ekstrak file smartlib.zip
+unzip smartlib.zip
+cd smartlib
+
+# 2. Install dependencies Flutter
+flutter pub get
+
+# 3. Jalankan aplikasi di emulator atau device yang sudah terhubung
+flutter run
+
